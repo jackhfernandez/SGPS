@@ -8,15 +8,13 @@ public class UsuarioAD
 {
     public Usuario? ObtenerPorEmail(string email)
     {
-        using var conexion = Conexion.getConexion();
-        using var comando = new SqlCommand("sp_AutenticarUsuario", conexion)
+        using var conexion = ConexionAD.ObtenerConexion();
+        using var comando = new SqlCommand("dbo.sp_AutenticarUsuario", conexion)
         {
             CommandType = CommandType.StoredProcedure
         };
 
         comando.Parameters.Add("@Email", SqlDbType.VarChar, 150).Value = email;
-        conexion.Open();
-
         using var lector = comando.ExecuteReader();
         if (!lector.Read())
         {
@@ -48,10 +46,9 @@ public class UsuarioAD
             WHERE ur.UsuarioId = @UsuarioId;
             """;
 
-        using var conexion = Conexion.getConexion();
+        using var conexion = ConexionAD.ObtenerConexion();
         using var comando = new SqlCommand(consulta, conexion);
         comando.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
-        conexion.Open();
 
         using var lector = comando.ExecuteReader();
         var roles = new List<Rol>();
