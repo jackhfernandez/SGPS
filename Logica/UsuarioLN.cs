@@ -1,3 +1,13 @@
+/*
+ * 1. Reporte de uso de IA
+ * 2. Prompt: "Genera el archivo UsuarioLN.cs basandote en la entidad
+ *    Usuario y en la clase UsuarioAD del proyecto. Implementa la
+ *    autenticacion de usuarios, la generacion de salt y hash seguro de
+ *    contrasenas, la verificacion de credenciales y la consulta de roles,
+ *    respetando la estructura actual del proyecto."
+ * 3. Cambios del equipo: Se implemento PBKDF2 con SHA-256.
+ */
+
 using System.Security.Cryptography;
 using Datos;
 using SGPS.Entidades;

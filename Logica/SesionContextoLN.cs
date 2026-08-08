@@ -1,3 +1,15 @@
+/*
+ * 1. Reporte de uso de IA
+ * 2. Prompt: "Genera el archivo SesionContextoLN.cs basandote en las
+ *    entidades Usuario y Rol del proyecto. Implementa un contexto de sesion
+ *    que permita iniciar y cerrar sesion, almacenar los roles actuales y
+ *    comprobar si el usuario tiene un rol solicitado, respetando la
+ *    estructura actual del proyecto."
+ * 3. Cambios del equipo: Se utiliza IEnumerable<Rol> como parametro en
+ *    IniciarSesion en lugar de depender de una coleccion o un enumerado y esto es
+ *    para recibir distintas fuentes de roles y con ToList() traerlo facil
+ */
+
 using SGPS.Entidades;
 
 namespace Logica;
