@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
+using Logica;
 
 namespace Presentacion
 {
@@ -13,6 +9,12 @@ namespace Presentacion
         public Principal()
         {
             InitializeComponent();
+        }
+
+        private void btnCerrarSesion_Click(object sender, EventArgs e)
+        {
+            SesionContextoLN.CerrarSesion();
+            Close();
         }
     }
 }
