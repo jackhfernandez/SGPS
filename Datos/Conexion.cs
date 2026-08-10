@@ -4,7 +4,7 @@ using Microsoft.Data.SqlClient;
 
 namespace Datos;
 
-public static class ConexionAD
+public static class Conexion
 {
     private const string NombreCadena = "SGPS_Connection";
     private const string ArchivoConfiguracionLocal = "Conexion.local.json";

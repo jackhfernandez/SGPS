@@ -8,7 +8,7 @@ public class UsuarioAD
 {
     public Usuario? ObtenerPorEmail(string email)
     {
-        using var conexion = ConexionAD.ObtenerConexion();
+        using var conexion = Conexion.ObtenerConexion();
         using var comando = new SqlCommand("dbo.sp_AutenticarUsuario", conexion)
         {
             CommandType = CommandType.StoredProcedure
@@ -46,7 +46,7 @@ public class UsuarioAD
             WHERE ur.UsuarioId = @UsuarioId;
             """;
 
-        using var conexion = ConexionAD.ObtenerConexion();
+        using var conexion = Conexion.ObtenerConexion();
         using var comando = new SqlCommand(consulta, conexion);
         comando.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
 

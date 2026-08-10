@@ -1,8 +1,6 @@
 -- ============================================================================
 -- SISTEMA DE GESTIÓN DE PROYECTOS DE SOFTWARE (SGPS)
 -- Script de Procedimientos Almacenados
--- Requisito previo: ejecutar SGPS_crea.sql
--- El script es re-ejecutable (CREATE OR ALTER).
 -- ============================================================================
 
 USE SGPS_DB;
