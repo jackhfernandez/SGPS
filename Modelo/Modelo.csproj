@@ -8,15 +8,14 @@
 
   <ItemGroup>
     <Compile Remove="bin\**" />
+    <Compile Remove="Entidades\**" />
     <Compile Remove="obj\**" />
     <EmbeddedResource Remove="bin\**" />
+    <EmbeddedResource Remove="Entidades\**" />
     <EmbeddedResource Remove="obj\**" />
     <None Remove="bin\**" />
+    <None Remove="Entidades\**" />
     <None Remove="obj\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Entidades\" />
   </ItemGroup>
 
 </Project>
