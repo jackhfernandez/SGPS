@@ -20,6 +20,8 @@ public static class SesionContextoLN
 
     public static Usuario UsuarioActual { get; private set; } = null!;
 
+    public static IReadOnlyList<Rol> RolesActuales => _rolesActuales;
+
     public static void IniciarSesion(Usuario usuario, IEnumerable<Rol> roles)
     {
         ArgumentNullException.ThrowIfNull(usuario);
