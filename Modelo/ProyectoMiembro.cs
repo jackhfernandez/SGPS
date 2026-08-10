@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Modelo
 {
-    public class ProyectoMiembros
+    public class ProyectoMiembro
     {
         public int ProyectoId { get; set; }
         public int UsuarioId { get; set; }
