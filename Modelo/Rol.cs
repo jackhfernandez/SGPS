@@ -1,4 +1,4 @@
-namespace SGPS.Entidades;
+namespace Modelo;
 
 public class Rol
 {

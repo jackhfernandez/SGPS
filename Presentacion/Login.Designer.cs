@@ -365,6 +365,7 @@
             txtContrasena.PlaceholderText = "••••••••";
             txtContrasena.Size = new Size(448, 26);
             txtContrasena.TabIndex = 9;
+            txtContrasena.Text = "Sgps.2026";
             // 
             // labelContrasena
             // 
@@ -390,6 +391,7 @@
             txtCorreo.PlaceholderText = "nombre@empresa.com";
             txtCorreo.Size = new Size(448, 26);
             txtCorreo.TabIndex = 8;
+            txtCorreo.Text = "admin@sgps.local";
             // 
             // labelCorreo
             // 

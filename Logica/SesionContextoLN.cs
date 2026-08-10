@@ -10,7 +10,7 @@
  *    para recibir distintas fuentes de roles y con ToList() traerlo facil
  */
 
-using SGPS.Entidades;
+using Modelo;
 
 namespace Logica;
 

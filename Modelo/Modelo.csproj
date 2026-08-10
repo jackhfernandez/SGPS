@@ -15,4 +15,8 @@
     <None Remove="obj\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Entidades\" />
+  </ItemGroup>
+
 </Project>

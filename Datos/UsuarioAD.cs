@@ -1,5 +1,5 @@
 using Microsoft.Data.SqlClient;
-using SGPS.Entidades;
+using Modelo;
 using System.Data;
 
 namespace Datos;

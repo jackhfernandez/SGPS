@@ -10,7 +10,7 @@
 
 using System.Security.Cryptography;
 using Datos;
-using SGPS.Entidades;
+using Modelo;
 
 namespace Logica;
 
