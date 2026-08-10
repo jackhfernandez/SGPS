@@ -9,8 +9,8 @@ namespace Modelo
         public int NotificacionId { get; set; }
         public int UsuarioId { get; set; }
         public int? UserStoryId { get; set; }
-        public string Titulo { get; set; }
-        public string Mensaje { get; set; }
+        public string Titulo { get; set; } = string.Empty;
+        public string Mensaje { get; set; } = string.Empty;
         public bool Leido { get; set; }
         public DateTime FechaNotificacion { get; set; }
 
