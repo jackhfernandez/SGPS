@@ -44,6 +44,95 @@ public class UsuarioLN
 
     public List<Rol> ObtenerRoles(int usuarioId) => _usuarioAD.ObtenerRolesPorUsuario(usuarioId);
 
+    public List<Usuario> ListarUsuarios() => _usuarioAD.ListarUsuarios();
+
+    public Dictionary<int, List<Rol>> ObtenerRolesDeTodosLosUsuarios() =>
+        _usuarioAD.ObtenerRolesDeTodosLosUsuarios();
+
+    public int CrearUsuario(Usuario nuevo, string password)
+    {
+        ValidarDatosUsuario(nuevo);
+        ValidarPassword(password);
+
+        if (_usuarioAD.ExisteEmail(nuevo.Email, null))
+        {
+            throw new InvalidOperationException($"El correo '{nuevo.Email}' ya está registrado en el sistema.");
+        }
+
+        var (hash, salt) = GenerarCredenciales(password);
+        return _usuarioAD.CrearUsuario(nuevo, hash, salt);
+    }
+
+    public void ActualizarUsuario(Usuario usuario)
+    {
+        ValidarDatosUsuario(usuario);
+
+        if (_usuarioAD.ExisteEmail(usuario.Email, usuario.UsuarioId))
+        {
+            throw new InvalidOperationException($"El correo '{usuario.Email}' ya está en uso por otro usuario.");
+        }
+
+        _usuarioAD.ActualizarUsuario(usuario);
+    }
+
+    public void CambiarEstadoActivo(int usuarioId, bool activo)
+    {
+        if (!activo && SesionContextoLN.UsuarioActual?.UsuarioId == usuarioId)
+        {
+            throw new InvalidOperationException("No puedes desactivar tu propia cuenta.");
+        }
+
+        _usuarioAD.CambiarEstado(usuarioId, activo);
+    }
+
+    public void RestablecerPassword(int usuarioId, string nuevaPassword)
+    {
+        ValidarPassword(nuevaPassword);
+
+        var (hash, salt) = GenerarCredenciales(nuevaPassword);
+        _usuarioAD.ActualizarPassword(usuarioId, hash, salt);
+    }
+
+    public void AsignarRoles(int usuarioId, List<int> rolIds)
+    {
+        ArgumentNullException.ThrowIfNull(rolIds);
+
+        _usuarioAD.AsignarRoles(usuarioId, rolIds);
+    }
+
+    private static void ValidarDatosUsuario(Usuario usuario)
+    {
+        ArgumentNullException.ThrowIfNull(usuario);
+
+        if (string.IsNullOrWhiteSpace(usuario.Nombres))
+        {
+            throw new ArgumentException("Los nombres son obligatorios.");
+        }
+
+        if (string.IsNullOrWhiteSpace(usuario.Apellidos))
+        {
+            throw new ArgumentException("Los apellidos son obligatorios.");
+        }
+
+        if (string.IsNullOrWhiteSpace(usuario.Email))
+        {
+            throw new ArgumentException("El correo electrónico es obligatorio.");
+        }
+
+        if (!usuario.Email.Contains('@'))
+        {
+            throw new ArgumentException("El correo electrónico no tiene un formato válido.");
+        }
+    }
+
+    private static void ValidarPassword(string password)
+    {
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 6)
+        {
+            throw new ArgumentException("La contraseña debe tener al menos 6 caracteres.");
+        }
+    }
+
     public static (string Hash, string Salt) GenerarCredenciales(string password)
     {
         var salt = GenerarSalt();
