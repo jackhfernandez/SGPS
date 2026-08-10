@@ -7,11 +7,13 @@ namespace Modelo
     public class HistorialCambio
     {
         public int HistorialId { get; set; }
-        public string Entidad { get; set; }
+        public string Entidad { get; set; } = string.Empty;
         public int EntidadId { get; set; }
-        public string CampoModificado { get; set; }
-        public string ValorAnterior { get; set; }
-        public string ValorNuevo { get; set; }
+        public string CampoModificado { get; set; } = string.Empty;
+
+        // ValorAnterior y ValorNuevo admiten NULL en dbo.HistorialCambios.
+        public string? ValorAnterior { get; set; }
+        public string? ValorNuevo { get; set; }
         public int UsuarioId { get; set; }
         public DateTime FechaModificacion { get; set; }
 
@@ -20,7 +22,7 @@ namespace Modelo
             FechaModificacion = DateTime.Now;
         }
 
-        public HistorialCambio(string entidad, int entidadId, string campoModificado, string valorAnterior, string valorNuevo, int usuarioId)
+        public HistorialCambio(string entidad, int entidadId, string campoModificado, string? valorAnterior, string? valorNuevo, int usuarioId)
             : this()
         {
             Entidad = entidad;
