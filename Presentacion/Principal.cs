@@ -1,9 +1,11 @@
-﻿using System;
-using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
-using Logica;
-using Presentacion.Modulos;
+﻿using Logica;
+using Presentacion.Backlog;
+using Presentacion.Cliente;
+using Presentacion.Kanban;
+using Presentacion.Proyectos;
+using Presentacion.QA;
+using Presentacion.Sprint;
+using Presentacion.Reporte;
 using Presentacion.Seguridad;
 
 namespace Presentacion;
@@ -46,7 +48,7 @@ public partial class Principal : Form
         if (SesionContextoLN.TieneRol("Developer"))
         {
             proyectosMenu.Visible = false;
-            mnuUsuarios.Visible = false;
+            seguridadUsuarios.Visible = false;
         }
     }
 
@@ -74,7 +76,7 @@ public partial class Principal : Form
         var formulario = new TForm
         {
             MdiParent = this,
-            WindowState = FormWindowState.Maximized
+            //WindowState = FormWindowState.Maximized
         };
 
         formulario.Show();
@@ -88,29 +90,105 @@ public partial class Principal : Form
         Close();
     }
 
-    private void mnuProyectoNuevo_Click(object sender, EventArgs e) => AbrirFormulario<ProyectoCreacion>();
-
-    private void backlogMenu_Click(object sender, EventArgs e) => AbrirFormulario<ProductBacklogGestion>();
-
-    private void sprintsMenu_Click(object sender, EventArgs e) => AbrirFormulario<SprintPlanificacion>();
-
-    private void portalMenu_Click(object sender, EventArgs e) => AbrirPortalCliente();
-
-    private void mnuUsuarios_Click(object sender, EventArgs e) => AbrirFormulario<UsuarioGestion>();
-
-    private void mnuRoles_Click(object sender, EventArgs e) => AbrirFormulario<RolGestion>();
-
-    private void mnuVentanaMosaicoH_Click(object sender, EventArgs e) => LayoutMdi(MdiLayout.TileHorizontal);
-
-    private void mnuVentanaMosaicoV_Click(object sender, EventArgs e) => LayoutMdi(MdiLayout.TileVertical);
-
-    private void mnuVentanaCascada_Click(object sender, EventArgs e) => LayoutMdi(MdiLayout.Cascade);
-
-    private void mnuVentanaCerrarTodos_Click(object sender, EventArgs e)
+    private void backlogEpic_Click(object sender, EventArgs e)
     {
-        foreach (Form hijo in MdiChildren)
-        {
-            hijo.Close();
-        }
+        var form = new EpicGestion();
+        form.ShowDialog();
+    }
+
+    private void backlogProducto_Click(object sender, EventArgs e)
+    {
+        var form = new ProductBacklogGestion();
+        form.ShowDialog();
+    }
+
+    private void backlogHistoriaUsuarios_Click(object sender, EventArgs e)
+    {
+        var form = new UserStoryEdicion();
+        form.ShowDialog();
+    }
+
+    private void clientePortal_Click(object sender, EventArgs e)
+    {
+        var form = new ClientePortal();
+        form.ShowDialog();
+    }
+
+    private void kanbanTablero_Click(object sender, EventArgs e)
+    {
+        var form = new TableroKanban();
+        form.ShowDialog();
+    }
+
+    private void kanbanTarea_Click(object sender, EventArgs e)
+    {
+        var form = new TareaEdicion();
+        form.ShowDialog();
+    }
+
+    private void kanbanControlTarjetas_Click(object sender, EventArgs e)
+    {
+        var form = new UcTarjetaKanban();
+        form.ShowDialog();
+    }
+
+    private void proyectoMiembros_Click(object sender, EventArgs e)
+    {
+        var form = new ProyectoMiembros();
+        form.ShowDialog();
+    }
+
+    private void proyectoNuevo_Click(object sender, EventArgs e)
+    {
+        var form = new ProyectoCreacion();
+        form.ShowDialog();
+    }
+
+    private void gestionBugToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        var form = new BugGestion();
+        form.ShowDialog();
+    }
+
+    private void qaReporteBug_Click(object sender, EventArgs e)
+    {
+        var form = new BugReporte();
+        form.ShowDialog();
+    }
+
+    private void reporteVistaGraficos_Click(object sender, EventArgs e)
+    {
+        var form = new BurndownChartVista();
+        form.ShowDialog();
+    }
+
+    private void reporteMetricas_Click(object sender, EventArgs e)
+    {
+        var form = new MetricasAgilesVista();
+        form.ShowDialog();
+    }
+
+    private void seguridadRol_Click(object sender, EventArgs e)
+    {
+        var form = new RolGestion();
+        form.ShowDialog();
+    }
+
+    private void seguridadUsuarios_Click(object sender, EventArgs e)
+    {
+        var form = new UsuarioGestion();
+        form.ShowDialog();
+    }
+
+    private void sprintEjecucion_Click(object sender, EventArgs e)
+    {
+        var form = new SprintEjecucion();
+        form.ShowDialog();
+    }
+
+    private void sprintPlanificaciones_Click(object sender, EventArgs e)
+    {
+        var form = new SprintPlanificacion();
+        form.ShowDialog();
     }
 }

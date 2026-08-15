@@ -186,7 +186,7 @@ public partial class UsuarioGestion : Form
 
     private void btnNuevo_Click(object sender, EventArgs e)
     {
-        using var dialogo = new UsuarioNuevo();
+        /*using var dialogo = new UsuarioNuevo();
 
         if (dialogo.ShowDialog(this) != DialogResult.OK)
         {
@@ -220,7 +220,7 @@ public partial class UsuarioGestion : Form
                 "Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
-        }
+        }*/
     }
 
     private void btnEstado_Click(object sender, EventArgs e)

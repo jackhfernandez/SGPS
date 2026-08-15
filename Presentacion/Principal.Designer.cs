@@ -31,20 +31,33 @@ partial class Principal
         menuStrip1 = new MenuStrip();
         archivoMenu = new ToolStripMenuItem();
         mnuCerrarSesion = new ToolStripMenuItem();
-        proyectosMenu = new ToolStripMenuItem();
-        mnuProyectoNuevo = new ToolStripMenuItem();
         backlogMenu = new ToolStripMenuItem();
-        sprintsMenu = new ToolStripMenuItem();
-        portalMenu = new ToolStripMenuItem();
+        backlogEpic = new ToolStripMenuItem();
+        backlogProducto = new ToolStripMenuItem();
+        backlogHistoriaUsuarios = new ToolStripMenuItem();
+        clienteToolStripMenuItem = new ToolStripMenuItem();
+        clientePortal = new ToolStripMenuItem();
+        kanbanToolStripMenuItem = new ToolStripMenuItem();
+        kanbanTablero = new ToolStripMenuItem();
+        kanbanTarea = new ToolStripMenuItem();
+        kanbanControlTarjetas = new ToolStripMenuItem();
+        proyectosMenu = new ToolStripMenuItem();
+        proyectoNuevo = new ToolStripMenuItem();
+        proyectoMiembros = new ToolStripMenuItem();
+        qaGestionBug = new ToolStripMenuItem();
+        gestionBugToolStripMenuItem = new ToolStripMenuItem();
+        qaReporteBug = new ToolStripMenuItem();
+        reporteToolStripMenuItem = new ToolStripMenuItem();
+        reporteVistaGraficos = new ToolStripMenuItem();
+        reporteMetricas = new ToolStripMenuItem();
         seguridadMenu = new ToolStripMenuItem();
-        mnuUsuarios = new ToolStripMenuItem();
-        mnuRoles = new ToolStripMenuItem();
-        ventanaMenu = new ToolStripMenuItem();
-        mnuVentanaMosaicoH = new ToolStripMenuItem();
-        mnuVentanaMosaicoV = new ToolStripMenuItem();
-        mnuVentanaCascada = new ToolStripMenuItem();
-        toolStripSeparator1 = new ToolStripSeparator();
-        mnuVentanaCerrarTodos = new ToolStripMenuItem();
+        seguridadRol = new ToolStripMenuItem();
+        seguridadUsuarios = new ToolStripMenuItem();
+        sprintsMenu = new ToolStripMenuItem();
+        sprintEjecucion = new ToolStripMenuItem();
+        sprintPlanificaciones = new ToolStripMenuItem();
+        seguridadRoles = new ToolStripMenuItem();
+        sprintPlanificacion = new ToolStripMenuItem();
         statusStrip1 = new StatusStrip();
         lblStatusUsuario = new ToolStripStatusLabel();
         lblStatusRol = new ToolStripStatusLabel();
@@ -54,18 +67,8 @@ partial class Principal
         // 
         // menuStrip1
         // 
-        menuStrip1.Items.AddRange(new ToolStripItem[]
-        {
-            archivoMenu,
-            proyectosMenu,
-            backlogMenu,
-            sprintsMenu,
-            portalMenu,
-            seguridadMenu,
-            ventanaMenu
-        });
+        menuStrip1.Items.AddRange(new ToolStripItem[] { archivoMenu, backlogMenu, clienteToolStripMenuItem, kanbanToolStripMenuItem, proyectosMenu, qaGestionBug, reporteToolStripMenuItem, seguridadMenu, sprintsMenu });
         menuStrip1.Location = new Point(0, 0);
-        menuStrip1.MdiWindowListItem = ventanaMenu;
         menuStrip1.Name = "menuStrip1";
         menuStrip1.Size = new Size(1100, 24);
         menuStrip1.TabIndex = 0;
@@ -81,112 +84,196 @@ partial class Principal
         // mnuCerrarSesion
         // 
         mnuCerrarSesion.Name = "mnuCerrarSesion";
-        mnuCerrarSesion.Size = new Size(180, 22);
+        mnuCerrarSesion.Size = new Size(142, 22);
         mnuCerrarSesion.Text = "&Cerrar sesión";
         mnuCerrarSesion.Click += mnuCerrarSesion_Click;
         // 
-        // proyectosMenu
-        // 
-        proyectosMenu.DropDownItems.AddRange(new ToolStripItem[] { mnuProyectoNuevo });
-        proyectosMenu.Name = "proyectosMenu";
-        proyectosMenu.Size = new Size(75, 20);
-        proyectosMenu.Text = "&Proyectos";
-        // 
-        // mnuProyectoNuevo
-        // 
-        mnuProyectoNuevo.Name = "mnuProyectoNuevo";
-        mnuProyectoNuevo.Size = new Size(180, 22);
-        mnuProyectoNuevo.Text = "&Nuevo proyecto...";
-        mnuProyectoNuevo.Click += mnuProyectoNuevo_Click;
-        // 
         // backlogMenu
         // 
+        backlogMenu.DropDownItems.AddRange(new ToolStripItem[] { backlogEpic, backlogProducto, backlogHistoriaUsuarios });
         backlogMenu.Name = "backlogMenu";
-        backlogMenu.Size = new Size(66, 20);
+        backlogMenu.Size = new Size(61, 20);
         backlogMenu.Text = "&Backlog";
-        backlogMenu.Click += backlogMenu_Click;
         // 
-        // sprintsMenu
+        // backlogEpic
         // 
-        sprintsMenu.Name = "sprintsMenu";
-        sprintsMenu.Size = new Size(65, 20);
-        sprintsMenu.Text = "S&prints";
-        sprintsMenu.Click += sprintsMenu_Click;
+        backlogEpic.Name = "backlogEpic";
+        backlogEpic.Size = new Size(174, 22);
+        backlogEpic.Text = "Epic";
+        backlogEpic.Click += backlogEpic_Click;
         // 
-        // portalMenu
+        // backlogProducto
         // 
-        portalMenu.Name = "portalMenu";
-        portalMenu.Size = new Size(117, 20);
-        portalMenu.Text = "&Portal de cliente";
-        portalMenu.Click += portalMenu_Click;
+        backlogProducto.Name = "backlogProducto";
+        backlogProducto.Size = new Size(174, 22);
+        backlogProducto.Text = "Backlog Producto";
+        backlogProducto.Click += backlogProducto_Click;
+        // 
+        // backlogHistoriaUsuarios
+        // 
+        backlogHistoriaUsuarios.Name = "backlogHistoriaUsuarios";
+        backlogHistoriaUsuarios.Size = new Size(174, 22);
+        backlogHistoriaUsuarios.Text = "Historia de Usuario";
+        backlogHistoriaUsuarios.Click += backlogHistoriaUsuarios_Click;
+        // 
+        // clienteToolStripMenuItem
+        // 
+        clienteToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { clientePortal });
+        clienteToolStripMenuItem.Name = "clienteToolStripMenuItem";
+        clienteToolStripMenuItem.Size = new Size(56, 20);
+        clienteToolStripMenuItem.Text = "Cliente";
+        // 
+        // clientePortal
+        // 
+        clientePortal.Name = "clientePortal";
+        clientePortal.Size = new Size(105, 22);
+        clientePortal.Text = "Portal";
+        clientePortal.Click += clientePortal_Click;
+        // 
+        // kanbanToolStripMenuItem
+        // 
+        kanbanToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { kanbanTablero, kanbanTarea, kanbanControlTarjetas });
+        kanbanToolStripMenuItem.Name = "kanbanToolStripMenuItem";
+        kanbanToolStripMenuItem.Size = new Size(59, 20);
+        kanbanToolStripMenuItem.Text = "Kanban";
+        // 
+        // kanbanTablero
+        // 
+        kanbanTablero.Name = "kanbanTablero";
+        kanbanTablero.Size = new Size(157, 22);
+        kanbanTablero.Text = "Tablero Kanban";
+        kanbanTablero.Click += kanbanTablero_Click;
+        // 
+        // kanbanTarea
+        // 
+        kanbanTarea.Name = "kanbanTarea";
+        kanbanTarea.Size = new Size(157, 22);
+        kanbanTarea.Text = "Tarea Edicion";
+        kanbanTarea.Click += kanbanTarea_Click;
+        // 
+        // kanbanControlTarjetas
+        // 
+        kanbanControlTarjetas.Name = "kanbanControlTarjetas";
+        kanbanControlTarjetas.Size = new Size(157, 22);
+        kanbanControlTarjetas.Text = "Control Tarjetas";
+        kanbanControlTarjetas.Click += kanbanControlTarjetas_Click;
+        // 
+        // proyectosMenu
+        // 
+        proyectosMenu.DropDownItems.AddRange(new ToolStripItem[] { proyectoNuevo, proyectoMiembros });
+        proyectosMenu.Name = "proyectosMenu";
+        proyectosMenu.Size = new Size(71, 20);
+        proyectosMenu.Text = "&Proyectos";
+        // 
+        // proyectoNuevo
+        // 
+        proyectoNuevo.Name = "proyectoNuevo";
+        proyectoNuevo.Size = new Size(128, 22);
+        proyectoNuevo.Text = "&Nuevo";
+        proyectoNuevo.Click += proyectoNuevo_Click;
+        // 
+        // proyectoMiembros
+        // 
+        proyectoMiembros.Name = "proyectoMiembros";
+        proyectoMiembros.Size = new Size(128, 22);
+        proyectoMiembros.Text = "&Miembros";
+        proyectoMiembros.Click += proyectoMiembros_Click;
+        // 
+        // qaGestionBug
+        // 
+        qaGestionBug.DropDownItems.AddRange(new ToolStripItem[] { gestionBugToolStripMenuItem, qaReporteBug });
+        qaGestionBug.Name = "qaGestionBug";
+        qaGestionBug.Size = new Size(36, 20);
+        qaGestionBug.Text = "QA";
+        // 
+        // gestionBugToolStripMenuItem
+        // 
+        gestionBugToolStripMenuItem.Name = "gestionBugToolStripMenuItem";
+        gestionBugToolStripMenuItem.Size = new Size(139, 22);
+        gestionBugToolStripMenuItem.Text = "Gestion Bug";
+        gestionBugToolStripMenuItem.Click += gestionBugToolStripMenuItem_Click;
+        // 
+        // qaReporteBug
+        // 
+        qaReporteBug.Name = "qaReporteBug";
+        qaReporteBug.Size = new Size(139, 22);
+        qaReporteBug.Text = "Reporte Bug";
+        qaReporteBug.Click += qaReporteBug_Click;
+        // 
+        // reporteToolStripMenuItem
+        // 
+        reporteToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { reporteVistaGraficos, reporteMetricas });
+        reporteToolStripMenuItem.Name = "reporteToolStripMenuItem";
+        reporteToolStripMenuItem.Size = new Size(60, 20);
+        reporteToolStripMenuItem.Text = "Reporte";
+        // 
+        // reporteVistaGraficos
+        // 
+        reporteVistaGraficos.Name = "reporteVistaGraficos";
+        reporteVistaGraficos.Size = new Size(145, 22);
+        reporteVistaGraficos.Text = "Vista Graficos";
+        reporteVistaGraficos.Click += reporteVistaGraficos_Click;
+        // 
+        // reporteMetricas
+        // 
+        reporteMetricas.Name = "reporteMetricas";
+        reporteMetricas.Size = new Size(145, 22);
+        reporteMetricas.Text = "Metricas";
+        reporteMetricas.Click += reporteMetricas_Click;
         // 
         // seguridadMenu
         // 
-        seguridadMenu.DropDownItems.AddRange(new ToolStripItem[] { mnuUsuarios, mnuRoles });
+        seguridadMenu.DropDownItems.AddRange(new ToolStripItem[] { seguridadRol, seguridadUsuarios });
         seguridadMenu.Name = "seguridadMenu";
-        seguridadMenu.Size = new Size(77, 20);
+        seguridadMenu.Size = new Size(72, 20);
         seguridadMenu.Text = "&Seguridad";
         // 
-        // mnuUsuarios
+        // seguridadRol
         // 
-        mnuUsuarios.Name = "mnuUsuarios";
-        mnuUsuarios.Size = new Size(180, 22);
-        mnuUsuarios.Text = "&Usuarios";
-        mnuUsuarios.Click += mnuUsuarios_Click;
+        seguridadRol.Name = "seguridadRol";
+        seguridadRol.Size = new Size(119, 22);
+        seguridadRol.Text = "Roles";
+        seguridadRol.Click += seguridadRol_Click;
         // 
-        // mnuRoles
+        // seguridadUsuarios
         // 
-        mnuRoles.Name = "mnuRoles";
-        mnuRoles.Size = new Size(180, 22);
-        mnuRoles.Text = "&Roles";
-        mnuRoles.Click += mnuRoles_Click;
+        seguridadUsuarios.Name = "seguridadUsuarios";
+        seguridadUsuarios.Size = new Size(119, 22);
+        seguridadUsuarios.Text = "Usuarios";
+        seguridadUsuarios.Click += seguridadUsuarios_Click;
         // 
-        // ventanaMenu
+        // sprintsMenu
         // 
-        ventanaMenu.DropDownItems.AddRange(new ToolStripItem[]
-        {
-            mnuVentanaMosaicoH,
-            mnuVentanaMosaicoV,
-            mnuVentanaCascada,
-            toolStripSeparator1,
-            mnuVentanaCerrarTodos
-        });
-        ventanaMenu.Name = "ventanaMenu";
-        ventanaMenu.Size = new Size(68, 20);
-        ventanaMenu.Text = "&Ventana";
+        sprintsMenu.DropDownItems.AddRange(new ToolStripItem[] { sprintEjecucion, sprintPlanificaciones });
+        sprintsMenu.Name = "sprintsMenu";
+        sprintsMenu.Size = new Size(50, 20);
+        sprintsMenu.Text = "S&print";
         // 
-        // mnuVentanaMosaicoH
+        // sprintEjecucion
         // 
-        mnuVentanaMosaicoH.Name = "mnuVentanaMosaicoH";
-        mnuVentanaMosaicoH.Size = new Size(180, 22);
-        mnuVentanaMosaicoH.Text = "Mosaico &horizontal";
-        mnuVentanaMosaicoH.Click += mnuVentanaMosaicoH_Click;
+        sprintEjecucion.Name = "sprintEjecucion";
+        sprintEjecucion.Size = new Size(180, 22);
+        sprintEjecucion.Text = "Ejecucion";
+        sprintEjecucion.Click += sprintEjecucion_Click;
         // 
-        // mnuVentanaMosaicoV
+        // sprintPlanificaciones
         // 
-        mnuVentanaMosaicoV.Name = "mnuVentanaMosaicoV";
-        mnuVentanaMosaicoV.Size = new Size(180, 22);
-        mnuVentanaMosaicoV.Text = "Mosaico &vertical";
-        mnuVentanaMosaicoV.Click += mnuVentanaMosaicoV_Click;
+        sprintPlanificaciones.Name = "sprintPlanificaciones";
+        sprintPlanificaciones.Size = new Size(180, 22);
+        sprintPlanificaciones.Text = "Planificacion";
+        sprintPlanificaciones.Click += sprintPlanificaciones_Click;
         // 
-        // mnuVentanaCascada
+        // seguridadRoles
         // 
-        mnuVentanaCascada.Name = "mnuVentanaCascada";
-        mnuVentanaCascada.Size = new Size(180, 22);
-        mnuVentanaCascada.Text = "Ca&scada";
-        mnuVentanaCascada.Click += mnuVentanaCascada_Click;
+        seguridadRoles.Name = "seguridadRoles";
+        seguridadRoles.Size = new Size(119, 22);
+        seguridadRoles.Text = "&Roles";
         // 
-        // toolStripSeparator1
+        // sprintPlanificacion
         // 
-        toolStripSeparator1.Name = "toolStripSeparator1";
-        toolStripSeparator1.Size = new Size(177, 6);
-        // 
-        // mnuVentanaCerrarTodos
-        // 
-        mnuVentanaCerrarTodos.Name = "mnuVentanaCerrarTodos";
-        mnuVentanaCerrarTodos.Size = new Size(180, 22);
-        mnuVentanaCerrarTodos.Text = "Cerrar &todos";
-        mnuVentanaCerrarTodos.Click += mnuVentanaCerrarTodos_Click;
+        sprintPlanificacion.Name = "sprintPlanificacion";
+        sprintPlanificacion.Size = new Size(180, 22);
+        sprintPlanificacion.Text = "Planificacion";
         // 
         // statusStrip1
         // 
@@ -200,6 +287,7 @@ partial class Principal
         // lblStatusUsuario
         // 
         lblStatusUsuario.Name = "lblStatusUsuario";
+        lblStatusUsuario.Size = new Size(1050, 17);
         lblStatusUsuario.Spring = true;
         lblStatusUsuario.Text = "Usuario: -";
         lblStatusUsuario.TextAlign = ContentAlignment.MiddleLeft;
@@ -207,6 +295,7 @@ partial class Principal
         // lblStatusRol
         // 
         lblStatusRol.Name = "lblStatusRol";
+        lblStatusRol.Size = new Size(35, 17);
         lblStatusRol.Text = "Rol: -";
         // 
         // Principal
@@ -236,20 +325,37 @@ partial class Principal
     private ToolStripMenuItem archivoMenu;
     private ToolStripMenuItem mnuCerrarSesion;
     private ToolStripMenuItem proyectosMenu;
-    private ToolStripMenuItem mnuProyectoNuevo;
     private ToolStripMenuItem backlogMenu;
     private ToolStripMenuItem sprintsMenu;
     private ToolStripMenuItem portalMenu;
     private ToolStripMenuItem seguridadMenu;
     private ToolStripMenuItem mnuUsuarios;
-    private ToolStripMenuItem mnuRoles;
-    private ToolStripMenuItem ventanaMenu;
-    private ToolStripMenuItem mnuVentanaMosaicoH;
-    private ToolStripMenuItem mnuVentanaMosaicoV;
-    private ToolStripMenuItem mnuVentanaCascada;
-    private ToolStripSeparator toolStripSeparator1;
-    private ToolStripMenuItem mnuVentanaCerrarTodos;
+    private ToolStripMenuItem seguridadRoles;
     private StatusStrip statusStrip1;
     private ToolStripStatusLabel lblStatusUsuario;
     private ToolStripStatusLabel lblStatusRol;
+    private ToolStripMenuItem backlogEpic;
+    private ToolStripMenuItem backlogProducto;
+    private ToolStripMenuItem backlogHistoriaUsuarios;
+    private ToolStripMenuItem clienteToolStripMenuItem;
+    private ToolStripMenuItem clientePortal;
+    private ToolStripMenuItem kanbanToolStripMenuItem;
+    private ToolStripMenuItem kanbanTablero;
+    private ToolStripMenuItem kanbanTarea;
+    private ToolStripMenuItem kanbanControlTarjetas;
+    private ToolStripMenuItem proyectoMiembros;
+    private ToolStripMenuItem qaGestionBug;
+    private ToolStripMenuItem gestionBugToolStripMenuItem;
+    private ToolStripMenuItem qaReporteBug;
+    private ToolStripMenuItem reporteToolStripMenuItem;
+    private ToolStripMenuItem reporteVistaGraficos;
+    private ToolStripMenuItem reporteMetricas;
+    private ToolStripMenuItem gestionUsuariosToolStripMenuItem;
+    private ToolStripMenuItem ejecucToolStripMenuItem;
+    private ToolStripMenuItem sprintPlanificacion;
+    private ToolStripMenuItem proyectoNuevo;
+    private ToolStripMenuItem seguridadRol;
+    private ToolStripMenuItem seguridadUsuarios;
+    private ToolStripMenuItem sprintEjecucion;
+    private ToolStripMenuItem sprintPlanificaciones;
 }

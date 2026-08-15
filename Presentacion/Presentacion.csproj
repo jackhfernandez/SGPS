@@ -18,6 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="bvn14d4i.xex~" />
+    <None Remove="og2dmwux.qax~" />
     <None Remove="Principal.Designer.cs~RF73cac6c.TMP" />
   </ItemGroup>
 
