@@ -110,5 +110,150 @@ namespace Datos
                 }
             }
         }
+
+        public void Insertar(UserStory historia)
+        {
+            const string query = @"
+                INSERT INTO dbo.UserStories (
+                    CodigoTicket, ProyectoId, EpicId, SprintId, Titulo,
+                    ComoUsuario, QuieroFuncionalidad, ParaBeneficio,
+                    CriteriosAceptacionTexto, ValorNegocio, StoryPoints,
+                    Estado, OrdenPrioridad, UsuarioAsignadoId,
+                    FechaCreacion, FechaUltimaModificacion
+                )
+                VALUES (
+                    @CodigoTicket, @ProyectoId, @EpicId, @SprintId, @Titulo,
+                    @ComoUsuario, @QuieroFuncionalidad, @ParaBeneficio,
+                    @CriteriosAceptacionTexto, @ValorNegocio, @StoryPoints,
+                    @Estado, @OrdenPrioridad, @UsuarioAsignadoId,
+                    @FechaCreacion, @FechaUltimaModificacion
+                );
+                SELECT SCOPE_IDENTITY();";
+
+            using (var conexion = Conexion.ObtenerConexion())
+            {
+                using (var comando = new SqlCommand(query, conexion))
+                {
+                    comando.Parameters.Add("@CodigoTicket", SqlDbType.VarChar, 20).Value = historia.CodigoTicket;
+                    comando.Parameters.Add("@ProyectoId", SqlDbType.Int).Value = historia.ProyectoId;
+                    comando.Parameters.Add("@EpicId", SqlDbType.Int).Value = (object)historia.EpicId ?? DBNull.Value;
+                    comando.Parameters.Add("@SprintId", SqlDbType.Int).Value = (object)historia.SprintId ?? DBNull.Value;
+                    comando.Parameters.Add("@Titulo", SqlDbType.VarChar, 200).Value = historia.Titulo;
+                    comando.Parameters.Add("@ComoUsuario", SqlDbType.VarChar, 100).Value = historia.ComoUsuario;
+                    comando.Parameters.Add("@QuieroFuncionalidad", SqlDbType.VarChar, 255).Value = historia.QuieroFuncionalidad;
+                    comando.Parameters.Add("@ParaBeneficio", SqlDbType.VarChar, 255).Value = historia.ParaBeneficio;
+                    comando.Parameters.Add("@CriteriosAceptacionTexto", SqlDbType.VarChar).Value = (object)historia.CriteriosAceptacionTexto ?? DBNull.Value;
+                    comando.Parameters.Add("@ValorNegocio", SqlDbType.VarChar, 10).Value = historia.ValorNegocio;
+                    comando.Parameters.Add("@StoryPoints", SqlDbType.Int).Value = historia.StoryPoints;
+                    comando.Parameters.Add("@Estado", SqlDbType.VarChar, 30).Value = historia.Estado ?? "To Do";
+                    comando.Parameters.Add("@OrdenPrioridad", SqlDbType.Int).Value = historia.OrdenPrioridad;
+                    comando.Parameters.Add("@UsuarioAsignadoId", SqlDbType.Int).Value = (object)historia.UsuarioAsignadoId ?? DBNull.Value;
+                    comando.Parameters.Add("@FechaCreacion", SqlDbType.DateTime).Value = historia.FechaCreacion == default ? DateTime.Now : historia.FechaCreacion;
+                    comando.Parameters.Add("@FechaUltimaModificacion", SqlDbType.DateTime).Value = DateTime.Now;
+
+                    conexion.Open();
+                    historia.UserStoryId = Convert.ToInt32(comando.ExecuteScalar());
+                }
+            }
+        }
+
+        public void Actualizar(UserStory historia)
+        {
+            const string query = @"
+                UPDATE dbo.UserStories
+                SET EpicId = @EpicId,
+                    SprintId = @SprintId,
+                    Titulo = @Titulo,
+                    ComoUsuario = @ComoUsuario,
+                    QuieroFuncionalidad = @QuieroFuncionalidad,
+                    ParaBeneficio = @ParaBeneficio,
+                    CriteriosAceptacionTexto = @CriteriosAceptacionTexto,
+                    ValorNegocio = @ValorNegocio,
+                    StoryPoints = @StoryPoints,
+                    Estado = @Estado,
+                    OrdenPrioridad = @OrdenPrioridad,
+                    UsuarioAsignadoId = @UsuarioAsignadoId,
+                    FechaUltimaModificacion = @FechaUltimaModificacion
+                WHERE UserStoryId = @UserStoryId;";
+
+            using (var conexion = Conexion.ObtenerConexion())
+            {
+                using (var comando = new SqlCommand(query, conexion))
+                {
+                    comando.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = historia.UserStoryId;
+                    comando.Parameters.Add("@EpicId", SqlDbType.Int).Value = (object)historia.EpicId ?? DBNull.Value;
+                    comando.Parameters.Add("@SprintId", SqlDbType.Int).Value = (object)historia.SprintId ?? DBNull.Value;
+                    comando.Parameters.Add("@Titulo", SqlDbType.VarChar, 200).Value = historia.Titulo;
+                    comando.Parameters.Add("@ComoUsuario", SqlDbType.VarChar, 100).Value = historia.ComoUsuario;
+                    comando.Parameters.Add("@QuieroFuncionalidad", SqlDbType.VarChar, 255).Value = historia.QuieroFuncionalidad;
+                    comando.Parameters.Add("@ParaBeneficio", SqlDbType.VarChar, 255).Value = historia.ParaBeneficio;
+                    comando.Parameters.Add("@CriteriosAceptacionTexto", SqlDbType.VarChar).Value = (object)historia.CriteriosAceptacionTexto ?? DBNull.Value;
+                    comando.Parameters.Add("@ValorNegocio", SqlDbType.VarChar, 10).Value = historia.ValorNegocio;
+                    comando.Parameters.Add("@StoryPoints", SqlDbType.Int).Value = historia.StoryPoints;
+                    comando.Parameters.Add("@Estado", SqlDbType.VarChar, 30).Value = historia.Estado;
+                    comando.Parameters.Add("@OrdenPrioridad", SqlDbType.Int).Value = historia.OrdenPrioridad;
+                    comando.Parameters.Add("@UsuarioAsignadoId", SqlDbType.Int).Value = (object)historia.UsuarioAsignadoId ?? DBNull.Value;
+                    comando.Parameters.Add("@FechaUltimaModificacion", SqlDbType.DateTime).Value = DateTime.Now;
+
+                    conexion.Open();
+                    comando.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public List<UserStory> ListarPorProyectoOrdenado(int proyectoId)
+        {
+            var lista = new List<UserStory>();
+            // Aprovecha el índice IX_UserStories_ProyectoPrioridad sobre (ProyectoId, OrdenPrioridad)
+            const string query = @"
+                SELECT UserStoryId, CodigoTicket, ProyectoId, EpicId, SprintId,
+                       Titulo, ComoUsuario, QuieroFuncionalidad, ParaBeneficio,
+                       CriteriosAceptacionTexto, ValorNegocio, StoryPoints, Estado,
+                       OrdenPrioridad, UsuarioAsignadoId, FechaCreacion, FechaUltimaModificacion
+                FROM dbo.UserStories
+                WHERE ProyectoId = @ProyectoId
+                ORDER BY OrdenPrioridad ASC;";
+
+            using (var conexion = Conexion.ObtenerConexion())
+            {
+                using (var comando = new SqlCommand(query, conexion))
+                {
+                    comando.Parameters.Add("@ProyectoId", SqlDbType.Int).Value = proyectoId;
+
+                    conexion.Open();
+                    using (var reader = comando.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var us = new UserStory
+                            {
+                                UserStoryId = reader.GetInt32(reader.GetOrdinal("UserStoryId")),
+                                CodigoTicket = reader.GetString(reader.GetOrdinal("CodigoTicket")),
+                                ProyectoId = reader.GetInt32(reader.GetOrdinal("ProyectoId")),
+                                EpicId = reader.IsDBNull(reader.GetOrdinal("EpicId")) ? (int?)null : reader.GetInt32(reader.GetOrdinal("EpicId")),
+                                SprintId = reader.IsDBNull(reader.GetOrdinal("SprintId")) ? (int?)null : reader.GetInt32(reader.GetOrdinal("SprintId")),
+                                Titulo = reader.GetString(reader.GetOrdinal("Titulo")),
+                                ComoUsuario = reader.GetString(reader.GetOrdinal("ComoUsuario")),
+                                QuieroFuncionalidad = reader.GetString(reader.GetOrdinal("QuieroFuncionalidad")),
+                                ParaBeneficio = reader.GetString(reader.GetOrdinal("ParaBeneficio")),
+                                CriteriosAceptacionTexto = reader.IsDBNull(reader.GetOrdinal("CriteriosAceptacionTexto")) ? null : reader.GetString(reader.GetOrdinal("CriteriosAceptacionTexto")),
+                                ValorNegocio = reader.GetString(reader.GetOrdinal("ValorNegocio")),
+                                StoryPoints = reader.GetInt32(reader.GetOrdinal("StoryPoints")),
+                                Estado = reader.GetString(reader.GetOrdinal("Estado")),
+                                OrdenPrioridad = reader.GetInt32(reader.GetOrdinal("OrdenPrioridad")),
+                                UsuarioAsignadoId = reader.IsDBNull(reader.GetOrdinal("UsuarioAsignadoId")) ? (int?)null : reader.GetInt32(reader.GetOrdinal("UsuarioAsignadoId")),
+                                FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FechaCreacion")),
+                                FechaUltimaModificacion = reader.GetDateTime(reader.GetOrdinal("FechaUltimaModificacion"))
+                            };
+
+                            lista.Add(us);
+                        }
+                    }
+                }
+            }
+
+            return lista;
+        }
     }
 }
+
