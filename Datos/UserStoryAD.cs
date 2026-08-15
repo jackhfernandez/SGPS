@@ -254,6 +254,86 @@ namespace Datos
 
             return lista;
         }
+
+        public List<UserStory> ListarPorSprint(int sprintId)
+        {
+            var lista = new List<UserStory>();
+
+            const string query = @"
+                SELECT 
+                    UserStoryId,
+                    CodigoTicket,
+                    ProyectoId,
+                    EpicId,
+                    SprintId,
+                    Titulo,
+                    ComoUsuario,
+                    QuieroFuncionalidad,
+                    ParaBeneficio,
+                    CriteriosAceptacionTexto,
+                    ValorNegocio,
+                    StoryPoints,
+                    Estado,
+                    OrdenPrioridad,
+                    UsuarioAsignadoId,
+                    FechaCreacion,
+                    FechaUltimaModificacion
+                FROM dbo.UserStories
+                WHERE SprintId = @SprintId
+                ORDER BY OrdenPrioridad ASC;";
+
+            using (SqlConnection conexion = Conexion.ObtenerConexion())
+            {
+                using (SqlCommand cmd = new SqlCommand(query, conexion))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@SprintId", SqlDbType.Int).Value = sprintId;
+
+                    try
+                    {
+                        if (conexion.State == ConnectionState.Closed)
+                        {
+                            conexion.Open();
+                        }
+
+                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                var historia = new UserStory
+                                {
+                                    UserStoryId = dr.GetInt32(dr.GetOrdinal("UserStoryId")),
+                                    CodigoTicket = dr.GetString(dr.GetOrdinal("CodigoTicket")),
+                                    ProyectoId = dr.GetInt32(dr.GetOrdinal("ProyectoId")),
+                                    EpicId = dr.IsDBNull(dr.GetOrdinal("EpicId")) ? (int?)null : dr.GetInt32(dr.GetOrdinal("EpicId")),
+                                    SprintId = dr.IsDBNull(dr.GetOrdinal("SprintId")) ? (int?)null : dr.GetInt32(dr.GetOrdinal("SprintId")),
+                                    Titulo = dr.GetString(dr.GetOrdinal("Titulo")),
+                                    ComoUsuario = dr.GetString(dr.GetOrdinal("ComoUsuario")),
+                                    QuieroFuncionalidad = dr.GetString(dr.GetOrdinal("QuieroFuncionalidad")),
+                                    ParaBeneficio = dr.GetString(dr.GetOrdinal("ParaBeneficio")),
+                                    CriteriosAceptacionTexto = dr.IsDBNull(dr.GetOrdinal("CriteriosAceptacionTexto")) ? null : dr.GetString(dr.GetOrdinal("CriteriosAceptacionTexto")),
+                                    ValorNegocio = dr.GetString(dr.GetOrdinal("ValorNegocio")),
+                                    StoryPoints = dr.GetInt32(dr.GetOrdinal("StoryPoints")),
+                                    Estado = dr.GetString(dr.GetOrdinal("Estado")),
+                                    OrdenPrioridad = dr.GetInt32(dr.GetOrdinal("OrdenPrioridad")),
+                                    UsuarioAsignadoId = dr.IsDBNull(dr.GetOrdinal("UsuarioAsignadoId")) ? (int?)null : dr.GetInt32(dr.GetOrdinal("UsuarioAsignadoId")),
+                                    FechaCreacion = dr.GetDateTime(dr.GetOrdinal("FechaCreacion")),
+                                    FechaUltimaModificacion = dr.GetDateTime(dr.GetOrdinal("FechaUltimaModificacion"))
+                                };
+
+                                lista.Add(historia);
+                            }
+                        }
+                    }
+                    catch (SqlException ex)
+                    {
+                        throw new ApplicationException($"Error al consultar las Historias de Usuario para el Sprint ID {sprintId} en SGPS_DB: {ex.Message}", ex);
+                    }
+                }
+            }
+
+            return lista;
+        }
     }
 }
 

@@ -238,5 +238,136 @@ namespace Datos
                 ProyectoNombre = dr["NombreProyecto"] != DBNull.Value ? dr["NombreProyecto"].ToString() : null
             };
         }
+
+        /// <summary>
+        /// Inserta un nuevo Sprint en la tabla dbo.Sprints.
+        /// </summary>
+        public bool Insertar(Sprint sprint, out string mensajeError)
+        {
+            mensajeError = string.Empty;
+            string query = @"INSERT INTO dbo.Sprints (ProyectoId, NombreSprint, SprintGoal, FechaInicio, FechaFin, Estado, FechaCreacion)
+                             VALUES (@ProyectoId, @NombreSprint, @SprintGoal, @FechaInicio, @FechaFin, @Estado, @FechaCreacion);
+                             SELECT SCOPE_IDENTITY();";
+
+            try
+            {
+                using (SqlConnection cn = Conexion.ObtenerConexion())
+                {
+                    using (SqlCommand cmd = new SqlCommand(query, cn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@ProyectoId", sprint.ProyectoId);
+                        cmd.Parameters.AddWithValue("@NombreSprint", sprint.NombreSprint);
+                        cmd.Parameters.AddWithValue("@SprintGoal", (object)sprint.SprintGoal ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@FechaInicio", sprint.FechaInicio.Date);
+                        cmd.Parameters.AddWithValue("@FechaFin", sprint.FechaFin.Date);
+                        cmd.Parameters.AddWithValue("@Estado", sprint.Estado ?? "Planificado");
+                        cmd.Parameters.AddWithValue("@FechaCreacion", sprint.FechaCreacion == default ? DateTime.Now : sprint.FechaCreacion);
+
+                        cn.Open();
+                        object resultado = cmd.ExecuteScalar();
+                        if (resultado != null && int.TryParse(resultado.ToString(), out int idGenerado))
+                        {
+                            sprint.SprintId = idGenerado;
+                            return true;
+                        }
+                        mensajeError = "No se pudo obtener el identificador generado para el Sprint.";
+                        return false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                mensajeError = "Error al insertar el Sprint: " + ex.Message;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene un Sprint por su clave primaria (SprintId).
+        /// </summary>
+        public Sprint ObtenerPorId(int sprintId)
+        {
+            Sprint sprint = null;
+            string query = @"SELECT SprintId, ProyectoId, NombreSprint, SprintGoal, FechaInicio, FechaFin, Estado, FechaCreacion
+                             FROM dbo.Sprints
+                             WHERE SprintId = @SprintId;";
+
+            try
+            {
+                using (SqlConnection cn = Conexion.ObtenerConexion())
+                {
+                    using (SqlCommand cmd = new SqlCommand(query, cn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@SprintId", sprintId);
+
+                        cn.Open();
+                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        {
+                            if (dr.Read())
+                            {
+                                sprint = new Sprint
+                                {
+                                    SprintId = Convert.ToInt32(dr["SprintId"]),
+                                    ProyectoId = Convert.ToInt32(dr["ProyectoId"]),
+                                    NombreSprint = dr["NombreSprint"].ToString(),
+                                    SprintGoal = dr["SprintGoal"] != DBNull.Value ? dr["SprintGoal"].ToString() : null,
+                                    FechaInicio = Convert.ToDateTime(dr["FechaInicio"]),
+                                    FechaFin = Convert.ToDateTime(dr["FechaFin"]),
+                                    Estado = dr["Estado"].ToString(),
+                                    FechaCreacion = Convert.ToDateTime(dr["FechaCreacion"])
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return sprint;
+        }
+
+        /// <summary>
+        /// Actualiza el estado operativo de un Sprint (ej. 'Planificado', 'Activo', 'Cerrado').
+        /// </summary>
+        public bool ActualizarEstado(int sprintId, string nuevoEstado, out string mensajeError)
+        {
+            mensajeError = string.Empty;
+            string query = @"UPDATE dbo.Sprints
+                             SET Estado = @Estado
+                             WHERE SprintId = @SprintId;";
+
+            try
+            {
+                using (SqlConnection cn = Conexion.ObtenerConexion())
+                {
+                    using (SqlCommand cmd = new SqlCommand(query, cn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@Estado", nuevoEstado);
+                        cmd.Parameters.AddWithValue("@SprintId", sprintId);
+
+                        cn.Open();
+                        int filasAfectadas = cmd.ExecuteNonQuery();
+                        if (filasAfectadas > 0)
+                        {
+                            return true;
+                        }
+
+                        mensajeError = "No se encontró el registro del Sprint para actualizar su estado.";
+                        return false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                mensajeError = "Error al actualizar el estado del Sprint: " + ex.Message;
+                return false;
+            }
+        }
     }
 }
