@@ -269,5 +269,124 @@ namespace Datos
             }
             return lista;
         }
+
+        /// <summary>
+        /// Obtiene todas las incidencias/bugs vinculados a una User Story específica.
+        /// </summary>
+        /// <param name="userStoryId">Identificador de la Historia de Usuario</param>
+        /// <returns>Lista de entidades Bug asociadas</returns>
+        public List<Bug> ObtenerBugsPorUserStory(int userStoryId)
+        {
+            List<Bug> lista = new List<Bug>();
+            string query = @"
+                SELECT BugId, CodigoBug, UserStoryId, ProyectoId, Titulo, 
+                       PasosReproducir, Severidad, Estado, UsuarioReportaId, 
+                       UsuarioAsignadoId, FechaReporte
+                FROM dbo.Bugs
+                WHERE UserStoryId = @UserStoryId
+                ORDER BY BugId ASC;";
+
+            using (SqlConnection cn = Conexion.ObtenerConexion())
+            {
+                using (SqlCommand cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = userStoryId;
+
+                    cn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            lista.Add(MapearBug(dr));
+                        }
+                    }
+                }
+            }
+
+            return lista;
+        }
+
+        /// <summary>
+        /// Inserta un nuevo registro en dbo.Bugs y retorna el BugId generado por IDENTITY.
+        /// </summary>
+        /// <param name="bug">Entidad Bug a persistir</param>
+        /// <returns>ID autogenerado del Bug insertado</returns>
+        public int Insertar(Bug bug)
+        {
+            int nuevoId = 0;
+            string query = @"
+                INSERT INTO dbo.Bugs 
+                    (CodigoBug, UserStoryId, ProyectoId, Titulo, PasosReproducir, 
+                     Severidad, Estado, UsuarioReportaId, UsuarioAsignadoId, FechaReporte)
+                VALUES 
+                    (@CodigoBug, @UserStoryId, @ProyectoId, @Titulo, @PasosReproducir, 
+                     @Severidad, @Estado, @UsuarioReportaId, @UsuarioAsignadoId, @FechaReporte);
+                SELECT SCOPE_IDENTITY();";
+
+            using (SqlConnection cn = Conexion.ObtenerConexion())
+            {
+                using (SqlCommand cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@CodigoBug", SqlDbType.VarChar, 20).Value = bug.CodigoBug;
+                    cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = (object)bug.UserStoryId ?? DBNull.Value;
+                    cmd.Parameters.Add("@ProyectoId", SqlDbType.Int).Value = bug.ProyectoId;
+                    cmd.Parameters.Add("@Titulo", SqlDbType.VarChar, 200).Value = bug.Titulo;
+                    cmd.Parameters.Add("@PasosReproducir", SqlDbType.VarChar, -1).Value = bug.PasosReproducir;
+                    cmd.Parameters.Add("@Severidad", SqlDbType.VarChar, 20).Value = bug.Severidad ?? "Media";
+                    cmd.Parameters.Add("@Estado", SqlDbType.VarChar, 20).Value = bug.Estado ?? "Nuevo";
+                    cmd.Parameters.Add("@UsuarioReportaId", SqlDbType.Int).Value = bug.UsuarioReportaId;
+                    cmd.Parameters.Add("@UsuarioAsignadoId", SqlDbType.Int).Value = (object)bug.UsuarioAsignadoId ?? DBNull.Value;
+                    cmd.Parameters.Add("@FechaReporte", SqlDbType.DateTime).Value = bug.FechaReporte == default(DateTime) ? DateTime.Now : bug.FechaReporte;
+
+                    cn.Open();
+                    object result = cmd.ExecuteScalar();
+                    if (result != null && result != DBNull.Value)
+                    {
+                        nuevoId = Convert.ToInt32(result);
+                    }
+                }
+            }
+
+            return nuevoId;
+        }
+
+        /// <summary>
+        /// Obtiene un Bug a partir de su clave primaria BugId.
+        /// </summary>
+        /// <param name="bugId">Identificador único del Bug</param>
+        /// <returns>Entidad Bug o null si no se encuentra</returns>
+        public Bug ObtenerPorId(int bugId)
+        {
+            Bug bug = null;
+            string query = @"
+                SELECT BugId, CodigoBug, UserStoryId, ProyectoId, Titulo, 
+                       PasosReproducir, Severidad, Estado, UsuarioReportaId, 
+                       UsuarioAsignadoId, FechaReporte
+                FROM dbo.Bugs
+                WHERE BugId = @BugId;";
+
+            using (SqlConnection cn = Conexion.ObtenerConexion())
+            {
+                using (SqlCommand cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@BugId", SqlDbType.Int).Value = bugId;
+
+                    cn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            bug = MapearBug(dr);
+                        }
+                    }
+                }
+            }
+
+            return bug;
+        }
     }
 }
+
