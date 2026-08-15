@@ -334,6 +334,103 @@ namespace Datos
 
             return lista;
         }
+
+        public UserStory ObtenerPorId(int userStoryId)
+        {
+            UserStory us = null;
+            string query = @"
+                SELECT UserStoryId, CodigoTicket, ProyectoId, EpicId, SprintId, Titulo, 
+                       ComoUsuario, QuieroFuncionalidad, ParaBeneficio, CriteriosAceptacionTexto, 
+                       ValorNegocio, StoryPoints, Estado, OrdenPrioridad, UsuarioAsignadoId, 
+                       FechaCreacion, FechaUltimaModificacion
+                FROM dbo.UserStories
+                WHERE UserStoryId = @UserStoryId;";
+
+            using (SqlConnection cn = Conexion.ObtenerConexion())
+            {
+                using (SqlCommand cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = userStoryId;
+
+                    cn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            us = new UserStory
+                            {
+                                UserStoryId = Convert.ToInt32(dr["UserStoryId"]),
+                                CodigoTicket = dr["CodigoTicket"].ToString(),
+                                ProyectoId = Convert.ToInt32(dr["ProyectoId"]),
+                                EpicId = dr["EpicId"] != DBNull.Value ? Convert.ToInt32(dr["EpicId"]) : (int?)null,
+                                SprintId = dr["SprintId"] != DBNull.Value ? Convert.ToInt32(dr["SprintId"]) : (int?)null,
+                                Titulo = dr["Titulo"].ToString(),
+                                ComoUsuario = dr["ComoUsuario"].ToString(),
+                                QuieroFuncionalidad = dr["QuieroFuncionalidad"].ToString(),
+                                ParaBeneficio = dr["ParaBeneficio"].ToString(),
+                                CriteriosAceptacionTexto = dr["CriteriosAceptacionTexto"] != DBNull.Value ? dr["CriteriosAceptacionTexto"].ToString() : null,
+                                ValorNegocio = dr["ValorNegocio"].ToString(),
+                                StoryPoints = Convert.ToInt32(dr["StoryPoints"]),
+                                Estado = dr["Estado"].ToString(),
+                                OrdenPrioridad = Convert.ToInt32(dr["OrdenPrioridad"]),
+                                UsuarioAsignadoId = dr["UsuarioAsignadoId"] != DBNull.Value ? Convert.ToInt32(dr["UsuarioAsignadoId"]) : (int?)null,
+                                FechaCreacion = Convert.ToDateTime(dr["FechaCreacion"]),
+                                FechaUltimaModificacion = Convert.ToDateTime(dr["FechaUltimaModificacion"])
+                            };
+                        }
+                    }
+                }
+            }
+            return us;
+        }
+
+        public bool ActualizarBool(UserStory us)
+        {
+            string query = @"
+                UPDATE dbo.UserStories
+                SET EpicId = @EpicId,
+                    SprintId = @SprintId,
+                    Titulo = @Titulo,
+                    ComoUsuario = @ComoUsuario,
+                    QuieroFuncionalidad = @QuieroFuncionalidad,
+                    ParaBeneficio = @ParaBeneficio,
+                    CriteriosAceptacionTexto = @CriteriosAceptacionTexto,
+                    ValorNegocio = @ValorNegocio,
+                    StoryPoints = @StoryPoints,
+                    Estado = @Estado,
+                    OrdenPrioridad = @OrdenPrioridad,
+                    UsuarioAsignadoId = @UsuarioAsignadoId,
+                    FechaUltimaModificacion = @FechaUltimaModificacion
+                WHERE UserStoryId = @UserStoryId;";
+
+            using (SqlConnection cn = Conexion.ObtenerConexion())
+            {
+                using (SqlCommand cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = us.UserStoryId;
+                    cmd.Parameters.Add("@EpicId", SqlDbType.Int).Value = (object)us.EpicId ?? DBNull.Value;
+                    cmd.Parameters.Add("@SprintId", SqlDbType.Int).Value = (object)us.SprintId ?? DBNull.Value;
+                    cmd.Parameters.Add("@Titulo", SqlDbType.VarChar, 200).Value = us.Titulo;
+                    cmd.Parameters.Add("@ComoUsuario", SqlDbType.VarChar, 100).Value = us.ComoUsuario;
+                    cmd.Parameters.Add("@QuieroFuncionalidad", SqlDbType.VarChar, 255).Value = us.QuieroFuncionalidad;
+                    cmd.Parameters.Add("@ParaBeneficio", SqlDbType.VarChar, 255).Value = us.ParaBeneficio;
+                    cmd.Parameters.Add("@CriteriosAceptacionTexto", SqlDbType.VarChar).Value = (object)us.CriteriosAceptacionTexto ?? DBNull.Value;
+                    cmd.Parameters.Add("@ValorNegocio", SqlDbType.VarChar, 10).Value = us.ValorNegocio;
+                    cmd.Parameters.Add("@StoryPoints", SqlDbType.Int).Value = us.StoryPoints;
+                    cmd.Parameters.Add("@Estado", SqlDbType.VarChar, 30).Value = us.Estado;
+                    cmd.Parameters.Add("@OrdenPrioridad", SqlDbType.Int).Value = us.OrdenPrioridad;
+                    cmd.Parameters.Add("@UsuarioAsignadoId", SqlDbType.Int).Value = (object)us.UsuarioAsignadoId ?? DBNull.Value;
+                    cmd.Parameters.Add("@FechaUltimaModificacion", SqlDbType.DateTime).Value = us.FechaUltimaModificacion == default(DateTime)
+                        ? DateTime.Now
+                        : us.FechaUltimaModificacion;
+
+                    cn.Open();
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+            }
+        }
     }
 }
 

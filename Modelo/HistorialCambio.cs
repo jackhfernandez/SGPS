@@ -32,5 +32,7 @@ namespace Modelo
             ValorNuevo = valorNuevo;
             UsuarioId = usuarioId;
         }
+
+        public string NombreUsuario { get; set; }
     }
 }

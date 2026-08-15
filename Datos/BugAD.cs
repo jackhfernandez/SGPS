@@ -225,5 +225,49 @@ namespace Datos
                 FechaReporte = Convert.ToDateTime(dr["FechaReporte"])
             };
         }
+
+        public List<Bug> ListarPorUserStory(int userStoryId)
+        {
+            var lista = new List<Bug>();
+            string query = @"
+                SELECT BugId, CodigoBug, UserStoryId, ProyectoId, Titulo, 
+                       PasosReproducir, Severidad, Estado, UsuarioReportaId, 
+                       UsuarioAsignadoId, FechaReporte
+                FROM dbo.Bugs
+                WHERE UserStoryId = @UserStoryId
+                ORDER BY BugId ASC;";
+
+            using (SqlConnection cn = Conexion.ObtenerConexion())
+            {
+                using (SqlCommand cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = userStoryId;
+
+                    cn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            lista.Add(new Bug
+                            {
+                                BugId = Convert.ToInt32(dr["BugId"]),
+                                CodigoBug = dr["CodigoBug"].ToString(),
+                                UserStoryId = dr["UserStoryId"] != DBNull.Value ? Convert.ToInt32(dr["UserStoryId"]) : (int?)null,
+                                ProyectoId = Convert.ToInt32(dr["ProyectoId"]),
+                                Titulo = dr["Titulo"].ToString(),
+                                PasosReproducir = dr["PasosReproducir"].ToString(),
+                                Severidad = dr["Severidad"].ToString(),
+                                Estado = dr["Estado"].ToString(),
+                                UsuarioReportaId = Convert.ToInt32(dr["UsuarioReportaId"]),
+                                UsuarioAsignadoId = dr["UsuarioAsignadoId"] != DBNull.Value ? Convert.ToInt32(dr["UsuarioAsignadoId"]) : (int?)null,
+                                FechaReporte = Convert.ToDateTime(dr["FechaReporte"])
+                            });
+                        }
+                    }
+                }
+            }
+            return lista;
+        }
     }
 }

@@ -195,5 +195,140 @@ namespace Datos
             object? result = cmd.ExecuteScalar();
             return result != null && result != DBNull.Value ? Convert.ToInt32(result) : 0;
         }
+
+        public int Insertar(Tarea tarea)
+        {
+            string query = @"
+                INSERT INTO dbo.Tareas 
+                    (UserStoryId, TituloTarea, HorasEstimadas, HorasTrabajadas, Estado, UsuarioAsignadoId, FechaCreacion)
+                VALUES 
+                    (@UserStoryId, @TituloTarea, @HorasEstimadas, @HorasTrabajadas, @Estado, @UsuarioAsignadoId, @FechaCreacion);
+                SELECT SCOPE_IDENTITY();";
+
+            using (SqlConnection cn = Conexion.ObtenerConexion())
+            {
+                using (SqlCommand cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = tarea.UserStoryId;
+                    cmd.Parameters.Add("@TituloTarea", SqlDbType.VarChar, 200).Value = tarea.TituloTarea;
+                    cmd.Parameters.Add("@HorasEstimadas", SqlDbType.Decimal).Value = tarea.HorasEstimadas;
+                    cmd.Parameters.Add("@HorasTrabajadas", SqlDbType.Decimal).Value = tarea.HorasTrabajadas;
+                    cmd.Parameters.Add("@Estado", SqlDbType.VarChar, 20).Value = string.IsNullOrEmpty(tarea.Estado) ? "Pendiente" : tarea.Estado;
+                    cmd.Parameters.Add("@UsuarioAsignadoId", SqlDbType.Int).Value = (object)tarea.UsuarioAsignadoId ?? DBNull.Value;
+                    cmd.Parameters.Add("@FechaCreacion", SqlDbType.DateTime).Value = tarea.FechaCreacion == default(DateTime) ? DateTime.Now : tarea.FechaCreacion;
+
+                    cn.Open();
+                    object result = cmd.ExecuteScalar();
+                    return Convert.ToInt32(result);
+                }
+            }
+        }
+
+        public Tarea ObtenerPorId(int tareaId)
+        {
+            Tarea tarea = null;
+            string query = @"
+                SELECT TareaId, UserStoryId, TituloTarea, HorasEstimadas, HorasTrabajadas, Estado, UsuarioAsignadoId, FechaCreacion
+                FROM dbo.Tareas
+                WHERE TareaId = @TareaId;";
+
+            using (SqlConnection cn = Conexion.ObtenerConexion())
+            {
+                using (SqlCommand cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@TareaId", SqlDbType.Int).Value = tareaId;
+
+                    cn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            tarea = new Tarea
+                            {
+                                TareaId = Convert.ToInt32(dr["TareaId"]),
+                                UserStoryId = Convert.ToInt32(dr["UserStoryId"]),
+                                TituloTarea = dr["TituloTarea"].ToString(),
+                                HorasEstimadas = Convert.ToDecimal(dr["HorasEstimadas"]),
+                                HorasTrabajadas = Convert.ToDecimal(dr["HorasTrabajadas"]),
+                                Estado = dr["Estado"].ToString(),
+                                UsuarioAsignadoId = dr["UsuarioAsignadoId"] != DBNull.Value ? Convert.ToInt32(dr["UsuarioAsignadoId"]) : (int?)null,
+                                FechaCreacion = Convert.ToDateTime(dr["FechaCreacion"])
+                            };
+                        }
+                    }
+                }
+            }
+            return tarea;
+        }
+
+        public bool Actualizar(Tarea tarea)
+        {
+            string query = @"
+                UPDATE dbo.Tareas
+                SET TituloTarea = @TituloTarea,
+                    HorasEstimadas = @HorasEstimadas,
+                    HorasTrabajadas = @HorasTrabajadas,
+                    Estado = @Estado,
+                    UsuarioAsignadoId = @UsuarioAsignadoId
+                WHERE TareaId = @TareaId;";
+
+            using (SqlConnection cn = Conexion.ObtenerConexion())
+            {
+                using (SqlCommand cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@TareaId", SqlDbType.Int).Value = tarea.TareaId;
+                    cmd.Parameters.Add("@TituloTarea", SqlDbType.VarChar, 200).Value = tarea.TituloTarea;
+                    cmd.Parameters.Add("@HorasEstimadas", SqlDbType.Decimal).Value = tarea.HorasEstimadas;
+                    cmd.Parameters.Add("@HorasTrabajadas", SqlDbType.Decimal).Value = tarea.HorasTrabajadas;
+                    cmd.Parameters.Add("@Estado", SqlDbType.VarChar, 20).Value = tarea.Estado;
+                    cmd.Parameters.Add("@UsuarioAsignadoId", SqlDbType.Int).Value = (object)tarea.UsuarioAsignadoId ?? DBNull.Value;
+
+                    cn.Open();
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+            }
+        }
+
+        public List<Tarea> ListarPorUserStory(int userStoryId)
+        {
+            var lista = new List<Tarea>();
+            string query = @"
+                SELECT TareaId, UserStoryId, TituloTarea, HorasEstimadas, HorasTrabajadas, Estado, UsuarioAsignadoId, FechaCreacion
+                FROM dbo.Tareas
+                WHERE UserStoryId = @UserStoryId
+                ORDER BY TareaId ASC;";
+
+            using (SqlConnection cn = Conexion.ObtenerConexion())
+            {
+                using (SqlCommand cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = userStoryId;
+
+                    cn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            lista.Add(new Tarea
+                            {
+                                TareaId = Convert.ToInt32(dr["TareaId"]),
+                                UserStoryId = Convert.ToInt32(dr["UserStoryId"]),
+                                TituloTarea = dr["TituloTarea"].ToString(),
+                                HorasEstimadas = Convert.ToDecimal(dr["HorasEstimadas"]),
+                                HorasTrabajadas = Convert.ToDecimal(dr["HorasTrabajadas"]),
+                                Estado = dr["Estado"].ToString(),
+                                UsuarioAsignadoId = dr["UsuarioAsignadoId"] != DBNull.Value ? Convert.ToInt32(dr["UsuarioAsignadoId"]) : (int?)null,
+                                FechaCreacion = Convert.ToDateTime(dr["FechaCreacion"])
+                            });
+                        }
+                    }
+                }
+            }
+            return lista;
+        }
     }
 }
