@@ -163,5 +163,55 @@ namespace Datos
 
             return lista;
         }
+
+        public List<HistorialCambio> ListarPorEntidad(string entidad)
+        {
+            List<HistorialCambio> lista = new List<HistorialCambio>();
+            string query = @"
+                SELECT 
+                    HistorialId, 
+                    Entidad, 
+                    EntidadId, 
+                    CampoModificado, 
+                    ValorAnterior, 
+                    ValorNuevo, 
+                    UsuarioId, 
+                    FechaModificacion 
+                FROM dbo.HistorialCambios 
+                WHERE Entidad = @Entidad
+                ORDER BY FechaModificacion ASC;";
+
+            using (SqlConnection cnx = Conexion.ObtenerConexion())
+            {
+                using (SqlCommand cmd = new SqlCommand(query, cnx))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@Entidad", SqlDbType.VarChar, 50).Value = entidad;
+
+                    cnx.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            HistorialCambio item = new HistorialCambio
+                            {
+                                HistorialId = Convert.ToInt32(dr["HistorialId"]),
+                                Entidad = dr["Entidad"].ToString(),
+                                EntidadId = Convert.ToInt32(dr["EntidadId"]),
+                                CampoModificado = dr["CampoModificado"].ToString(),
+                                ValorAnterior = dr["ValorAnterior"] != DBNull.Value ? dr["ValorAnterior"].ToString() : null,
+                                ValorNuevo = dr["ValorNuevo"] != DBNull.Value ? dr["ValorNuevo"].ToString() : null,
+                                UsuarioId = Convert.ToInt32(dr["UsuarioId"]),
+                                FechaModificacion = Convert.ToDateTime(dr["FechaModificacion"])
+                            };
+
+                            lista.Add(item);
+                        }
+                    }
+                }
+            }
+
+            return lista;
+        }
     }
 }

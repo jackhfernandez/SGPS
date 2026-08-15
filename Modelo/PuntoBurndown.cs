@@ -23,15 +23,13 @@ namespace Modelo
     /// </summary>
     public class PuntoBurndown
     {
+        public int DiaNumero { get; set; }
         public DateTime Fecha { get; set; }
+        public double PuntosIdeales { get; set; }
+        public double? PuntosRealesRestantes { get; set; } // Nullable para días posteriores a la fecha actual de corte
+
         public int PuntosPendientes { get; set; }
 
         public PuntoBurndown() { }
-
-        public PuntoBurndown(DateTime fecha, int puntosPendientes)
-        {
-            Fecha = fecha;
-            PuntosPendientes = puntosPendientes;
-        }
     }
 }
