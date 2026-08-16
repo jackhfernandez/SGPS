@@ -20,7 +20,6 @@ namespace Datos
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@ProyectoId", proyectoId);
 
-                    cn.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         while (dr.Read())
@@ -76,7 +75,6 @@ namespace Datos
                     cmd.Parameters.AddWithValue("@NuevoOrden", nuevoOrden);
                     cmd.Parameters.AddWithValue("@UserStoryId", userStoryId);
 
-                    cn.Open();
                     int filasAfectadas = cmd.ExecuteNonQuery();
                     return filasAfectadas > 0;
                 }
@@ -104,7 +102,6 @@ namespace Datos
                     cmd.Parameters.AddWithValue("@NuevoEstado", nuevoEstado);
                     cmd.Parameters.AddWithValue("@UserStoryId", userStoryId);
 
-                    cn.Open();
                     int filasAfectadas = cmd.ExecuteNonQuery();
                     return filasAfectadas > 0;
                 }
@@ -151,7 +148,6 @@ namespace Datos
                     comando.Parameters.Add("@FechaCreacion", SqlDbType.DateTime).Value = historia.FechaCreacion == default ? DateTime.Now : historia.FechaCreacion;
                     comando.Parameters.Add("@FechaUltimaModificacion", SqlDbType.DateTime).Value = DateTime.Now;
 
-                    conexion.Open();
                     historia.UserStoryId = Convert.ToInt32(comando.ExecuteScalar());
                 }
             }
@@ -195,7 +191,6 @@ namespace Datos
                     comando.Parameters.Add("@UsuarioAsignadoId", SqlDbType.Int).Value = (object)historia.UsuarioAsignadoId ?? DBNull.Value;
                     comando.Parameters.Add("@FechaUltimaModificacion", SqlDbType.DateTime).Value = DateTime.Now;
 
-                    conexion.Open();
                     comando.ExecuteNonQuery();
                 }
             }
@@ -220,7 +215,6 @@ namespace Datos
                 {
                     comando.Parameters.Add("@ProyectoId", SqlDbType.Int).Value = proyectoId;
 
-                    conexion.Open();
                     using (var reader = comando.ExecuteReader())
                     {
                         while (reader.Read())
@@ -291,11 +285,6 @@ namespace Datos
 
                     try
                     {
-                        if (conexion.State == ConnectionState.Closed)
-                        {
-                            conexion.Open();
-                        }
-
                         using (SqlDataReader dr = cmd.ExecuteReader())
                         {
                             while (dr.Read())
@@ -353,7 +342,6 @@ namespace Datos
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = userStoryId;
 
-                    cn.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         if (dr.Read())
@@ -426,8 +414,67 @@ namespace Datos
                         ? DateTime.Now
                         : us.FechaUltimaModificacion;
 
-                    cn.Open();
                     return cmd.ExecuteNonQuery() > 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Elimina la historia. Las Tareas y Comentarios caen por ON DELETE
+        /// CASCADE; los Bugs no, por eso conviene comprobarlos antes.
+        /// </summary>
+        public bool Eliminar(int userStoryId)
+        {
+            const string query = "DELETE FROM dbo.UserStories WHERE UserStoryId = @UserStoryId;";
+
+            using (var cn = Conexion.ObtenerConexion())
+            {
+                using (var cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = userStoryId;
+
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+            }
+        }
+
+        /// <summary>Bugs que apuntan a la historia; bloquean su eliminacion.</summary>
+        public int ContarBugs(int userStoryId)
+        {
+            const string query = "SELECT COUNT(*) FROM dbo.Bugs WHERE UserStoryId = @UserStoryId;";
+
+            using (var cn = Conexion.ObtenerConexion())
+            {
+                using (var cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = userStoryId;
+
+                    return Convert.ToInt32(cmd.ExecuteScalar());
+                }
+            }
+        }
+
+        /// <summary>dbo.UserStories.CodigoTicket tiene restriccion UNIQUE.</summary>
+        public bool ExisteCodigoTicket(string codigoTicket, int? excluirUserStoryId = null)
+        {
+            const string query = @"
+                SELECT COUNT(*)
+                FROM dbo.UserStories
+                WHERE CodigoTicket = @CodigoTicket
+                  AND (@ExcluirUserStoryId IS NULL OR UserStoryId <> @ExcluirUserStoryId);";
+
+            using (var cn = Conexion.ObtenerConexion())
+            {
+                using (var cmd = new SqlCommand(query, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@CodigoTicket", SqlDbType.VarChar, 20).Value = codigoTicket.Trim();
+                    cmd.Parameters.Add("@ExcluirUserStoryId", SqlDbType.Int).Value =
+                        (object)excluirUserStoryId ?? DBNull.Value;
+
+                    return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
                 }
             }
         }

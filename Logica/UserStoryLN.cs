@@ -53,6 +53,17 @@ namespace Logica
         public void Crear(UserStory historia)
         {
             ValidarEstructuraHistoria(historia);
+
+            if (string.IsNullOrWhiteSpace(historia.CodigoTicket))
+                throw new InvalidOperationException("El código de ticket de la historia es obligatorio.");
+
+            historia.CodigoTicket = historia.CodigoTicket.Trim().ToUpperInvariant();
+
+            // dbo.UserStories.CodigoTicket es UNIQUE: se valida aquí para no
+            // exponer el error crudo de SQL Server.
+            if (_userStoryAD.ExisteCodigoTicket(historia.CodigoTicket))
+                throw new InvalidOperationException($"Ya existe una historia con el código '{historia.CodigoTicket}'.");
+
             historia.FechaCreacion = DateTime.Now;
             historia.FechaUltimaModificacion = DateTime.Now;
 
@@ -62,9 +73,63 @@ namespace Logica
         public void Modificar(UserStory historia)
         {
             ValidarEstructuraHistoria(historia);
+
+            if (historia.UserStoryId <= 0)
+                throw new InvalidOperationException("La historia a modificar no tiene un identificador válido.");
+
             historia.FechaUltimaModificacion = DateTime.Now;
 
             _userStoryAD.Actualizar(historia);
+        }
+
+        public void Eliminar(int userStoryId)
+        {
+            if (userStoryId <= 0)
+                throw new InvalidOperationException("El identificador de la historia no es válido.");
+
+            // La FK de dbo.Bugs no tiene ON DELETE CASCADE, a diferencia de
+            // Tareas y Comentarios.
+            var bugs = _userStoryAD.ContarBugs(userStoryId);
+
+            if (bugs > 0)
+            {
+                throw new InvalidOperationException(
+                    $"No se puede eliminar la historia porque tiene {bugs} bug(s) asociado(s). " +
+                    "Cierra o reasigna esos bugs primero.");
+            }
+
+            _userStoryAD.Eliminar(userStoryId);
+        }
+
+        public UserStory ObtenerPorId(int userStoryId) => _userStoryAD.ObtenerPorId(userStoryId);
+
+        /// <summary>
+        /// Genera el siguiente código de ticket del proyecto con el formato
+        /// CLAVE-N que exige la especificación (ej. SGPS-101), tomando el
+        /// mayor correlativo existente.
+        /// </summary>
+        public string GenerarCodigoTicket(int proyectoId, string claveProyecto)
+        {
+            if (string.IsNullOrWhiteSpace(claveProyecto))
+                throw new ArgumentException("La clave del proyecto es obligatoria para generar el código.");
+
+            var prefijo = claveProyecto.Trim().ToUpperInvariant();
+            var maximo = 100;
+
+            foreach (var historia in _userStoryAD.ListarPorProyectoOrdenado(proyectoId))
+            {
+                var partes = historia.CodigoTicket?.Split('-');
+
+                if (partes is { Length: 2 } &&
+                    string.Equals(partes[0], prefijo, StringComparison.OrdinalIgnoreCase) &&
+                    int.TryParse(partes[1], out var numero) &&
+                    numero > maximo)
+                {
+                    maximo = numero;
+                }
+            }
+
+            return $"{prefijo}-{maximo + 1}";
         }
 
         public void ActualizarOrdenWSJF(int proyectoId, List<int> userStoryIdsOrdenados)

@@ -61,9 +61,9 @@ public static class MapaNavegacion
 
         new("Backlog", Tema.Glifos.Lista, "Epics, historias y priorización",
         [
-            new("Product Backlog", Modulo.ProductBacklogGestion, () => new ProductBacklogGestion(), false),
+            new("Product Backlog", Modulo.ProductBacklogGestion, () => new ProductBacklogGestion(), true),
             new("Epics", Modulo.EpicGestion, () => new EpicGestion(), true),
-            new("Historias", Modulo.UserStoryEdicion, () => new UserStoryEdicion(), false)
+            new("Historias", Modulo.UserStoryEdicion, () => new UserStoryEdicion(), true)
         ]),
 
         new("Sprints", Tema.Glifos.Cronometro, "Planificación y cierre de iteraciones",
