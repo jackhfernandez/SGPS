@@ -20,4 +20,10 @@
     <ProjectReference Include="..\Modelo\Modelo.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="permisos.roles.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

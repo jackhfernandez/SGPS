@@ -18,6 +18,17 @@ public partial class RolGestion : Form
 
     protected override void OnLoad(EventArgs e)
     {
+        try
+        {
+            PermisoLN.ValidarLectura(Modulo.RolGestion);
+        }
+        catch (PermisoDenegadoException ex)
+        {
+            MessageBox.Show(ex.Message, "Acceso denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            Close();
+            return;
+        }
+
         base.OnLoad(e);
         CargarRoles();
     }
