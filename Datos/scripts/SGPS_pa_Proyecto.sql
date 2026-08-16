@@ -1,8 +1,24 @@
+﻿/*
+ * 1. Reporte de uso de IA
+ * 2. Prompt: "Genera los procedimientos almacenados que consume ProyectoAD.cs
+ *    sobre dbo.Proyectos y dbo.ProyectoMiembros, siguiendo el formato de
+ *    SGPS_pa_Tarea.sql."
+ * 3. Cambios del equipo: sp_Proyecto_Insertar recibe @creadorUsuarioId con
+ *    DEFAULT NULL: si viene, registra de forma atomica al creador como PO
+ *    dentro de la misma transaccion; si no viene (flujo que inserta sus
+ *    propios miembros), se omite. Se incorporan sp_Proyecto_Listar,
+ *    sp_Proyecto_ExisteClave y sp_Proyecto_CambiarEstado para el CRUD del
+ *    modulo ProyectoCreacion. sp_Proyecto_CambiarEstado aplica FechaFinReal
+ *    al desactivar, igual que lo hacia la consulta inline anterior. Los
+ *    INSERT no fijan EsActivo ni FechaCreacion: los aplican los DEFAULT.
+ */
+
 USE SGPS_DB;
 GO
 
 -- ============================================================================
--- 1. PROCEDIMIENTO ALMACENADO: Insertar Proyecto y Creador como PO (Atómico)
+-- 1. PROCEDIMIENTO ALMACENADO: Insertar Proyecto y Creador como PO (Atomico)
+-- El estado inicial 'EsActivo=1' lo aplica el DEFAULT de la tabla.
 -- ============================================================================
 IF OBJECT_ID('sp_Proyecto_Insertar', 'P') IS NOT NULL
     DROP PROCEDURE sp_Proyecto_Insertar;
@@ -14,30 +30,28 @@ CREATE PROCEDURE sp_Proyecto_Insertar
     @descripcion       VARCHAR(MAX),
     @metodologia       VARCHAR(30),
     @fechaInicio       DATE,
-    @fechaFinEstimada  DATE,
-    @creadorUsuarioId  INT
+    @fechaFinEstimada  DATE = NULL,
+    @creadorUsuarioId  INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRANSACTION;
     BEGIN TRY
-        -- 1. Insertar el Proyecto
-        INSERT INTO dbo.Proyectos 
+        INSERT INTO dbo.Proyectos
             (ClaveProyecto, NombreProyecto, Descripcion, Metodologia, FechaInicio, FechaFinEstimada)
-        VALUES 
+        VALUES
             (@claveProyecto, @nombreProyecto, @descripcion, @metodologia, @fechaInicio, @fechaFinEstimada);
 
         DECLARE @nuevoProyectoId INT = SCOPE_IDENTITY();
 
-        -- 2. Inserción atómica del creador como Product Owner (PO)
-        INSERT INTO dbo.ProyectoMiembros 
-            (ProyectoId, UsuarioId, RolEnProyecto)
-        VALUES 
-            (@nuevoProyectoId, @creadorUsuarioId, 'PO');
+        IF @creadorUsuarioId IS NOT NULL
+        BEGIN
+            INSERT INTO dbo.ProyectoMiembros (ProyectoId, UsuarioId, RolEnProyecto)
+            VALUES (@nuevoProyectoId, @creadorUsuarioId, 'PO');
+        END
 
         COMMIT TRANSACTION;
 
-        -- Retornar el ID autogenerado
         SELECT @nuevoProyectoId AS ProyectoId;
     END TRY
     BEGIN CATCH
@@ -66,8 +80,9 @@ CREATE PROCEDURE sp_Proyecto_Modificar
 AS
 BEGIN
     SET NOCOUNT ON;
+
     UPDATE dbo.Proyectos
-    SET 
+    SET
         ClaveProyecto    = @claveProyecto,
         NombreProyecto   = @nombreProyecto,
         Descripcion      = @descripcion,
@@ -76,11 +91,42 @@ BEGIN
         FechaFinEstimada = @fechaFinEstimada,
         EsActivo         = @esActivo
     WHERE ProyectoId = @proyectoId;
+
+    SELECT @@ROWCOUNT AS FilasAfectadas;
 END;
 GO
 
 -- ============================================================================
--- 3. PROCEDIMIENTO ALMACENADO: Listar Proyectos por Usuario
+-- 3. PROCEDIMIENTO ALMACENADO: Listar todos los Proyectos
+-- Alimenta la grilla del modulo ProyectoCreacion (activos e inactivos).
+-- ============================================================================
+IF OBJECT_ID('sp_Proyecto_Listar', 'P') IS NOT NULL
+    DROP PROCEDURE sp_Proyecto_Listar;
+GO
+
+CREATE PROCEDURE sp_Proyecto_Listar
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        ProyectoId,
+        ClaveProyecto,
+        NombreProyecto,
+        Descripcion,
+        Metodologia,
+        FechaInicio,
+        FechaFinEstimada,
+        FechaFinReal,
+        EsActivo,
+        FechaCreacion
+    FROM dbo.Proyectos
+    ORDER BY FechaCreacion DESC;
+END;
+GO
+
+-- ============================================================================
+-- 4. PROCEDIMIENTO ALMACENADO: Listar Proyectos por Usuario (activos)
 -- ============================================================================
 IF OBJECT_ID('sp_Proyecto_ListarPorUsuario', 'P') IS NOT NULL
     DROP PROCEDURE sp_Proyecto_ListarPorUsuario;
@@ -91,7 +137,8 @@ CREATE PROCEDURE sp_Proyecto_ListarPorUsuario
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT 
+
+    SELECT
         p.ProyectoId,
         p.ClaveProyecto,
         p.NombreProyecto,
@@ -110,7 +157,53 @@ END;
 GO
 
 -- ============================================================================
--- 4. PROCEDIMIENTO ALMACENADO: Asignar Miembro al Proyecto
+-- 5. PROCEDIMIENTO ALMACENADO: Activar / Desactivar Proyecto
+-- Al desactivar se fija FechaFinReal; al reactivar vuelve a NULL.
+-- ============================================================================
+IF OBJECT_ID('sp_Proyecto_CambiarEstado', 'P') IS NOT NULL
+    DROP PROCEDURE sp_Proyecto_CambiarEstado;
+GO
+
+CREATE PROCEDURE sp_Proyecto_CambiarEstado
+    @proyectoId  INT,
+    @esActivo    BIT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.Proyectos
+    SET EsActivo = @esActivo,
+        FechaFinReal = CASE WHEN @esActivo = 0 THEN GETDATE() ELSE NULL END
+    WHERE ProyectoId = @proyectoId;
+
+    SELECT @@ROWCOUNT AS FilasAfectadas;
+END;
+GO
+
+-- ============================================================================
+-- 6. PROCEDIMIENTO ALMACENADO: Verificar unicidad de la clave del proyecto
+-- Con @excluirProyectoId NULL valida altas; con valor valida ediciones.
+-- ============================================================================
+IF OBJECT_ID('sp_Proyecto_ExisteClave', 'P') IS NOT NULL
+    DROP PROCEDURE sp_Proyecto_ExisteClave;
+GO
+
+CREATE PROCEDURE sp_Proyecto_ExisteClave
+    @claveProyecto      VARCHAR(10),
+    @excluirProyectoId  INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT COUNT(1) AS Existe
+    FROM dbo.Proyectos
+    WHERE UPPER(LTRIM(RTRIM(ClaveProyecto))) = UPPER(LTRIM(RTRIM(@claveProyecto)))
+      AND (@excluirProyectoId IS NULL OR ProyectoId <> @excluirProyectoId);
+END;
+GO
+
+-- ============================================================================
+-- 7. PROCEDIMIENTO ALMACENADO: Asignar Miembro al Proyecto
 -- ============================================================================
 IF OBJECT_ID('sp_Proyecto_AsignarMiembro', 'P') IS NOT NULL
     DROP PROCEDURE sp_Proyecto_AsignarMiembro;
@@ -123,6 +216,7 @@ CREATE PROCEDURE sp_Proyecto_AsignarMiembro
 AS
 BEGIN
     SET NOCOUNT ON;
+
     INSERT INTO dbo.ProyectoMiembros (ProyectoId, UsuarioId, RolEnProyecto)
     VALUES (@proyectoId, @usuarioId, @rolEnProyecto);
 END;

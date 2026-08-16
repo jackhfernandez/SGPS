@@ -168,15 +168,15 @@ partial class Principal
         // proyectoNuevo
         // 
         proyectoNuevo.Name = "proyectoNuevo";
-        proyectoNuevo.Size = new Size(128, 22);
+        proyectoNuevo.Size = new Size(171, 22);
         proyectoNuevo.Text = "&Nuevo";
         proyectoNuevo.Click += proyectoNuevo_Click;
         // 
         // proyectoMiembros
         // 
         proyectoMiembros.Name = "proyectoMiembros";
-        proyectoMiembros.Size = new Size(128, 22);
-        proyectoMiembros.Text = "&Miembros";
+        proyectoMiembros.Size = new Size(171, 22);
+        proyectoMiembros.Text = "Asignar Miembros";
         proyectoMiembros.Click += proyectoMiembros_Click;
         // 
         // qaGestionBug
@@ -252,14 +252,14 @@ partial class Principal
         // sprintEjecucion
         // 
         sprintEjecucion.Name = "sprintEjecucion";
-        sprintEjecucion.Size = new Size(180, 22);
+        sprintEjecucion.Size = new Size(142, 22);
         sprintEjecucion.Text = "Ejecucion";
         sprintEjecucion.Click += sprintEjecucion_Click;
         // 
         // sprintPlanificaciones
         // 
         sprintPlanificaciones.Name = "sprintPlanificaciones";
-        sprintPlanificaciones.Size = new Size(180, 22);
+        sprintPlanificaciones.Size = new Size(142, 22);
         sprintPlanificaciones.Text = "Planificacion";
         sprintPlanificaciones.Click += sprintPlanificaciones_Click;
         // 

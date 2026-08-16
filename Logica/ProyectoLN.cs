@@ -41,6 +41,75 @@ namespace Logica
         }
 
         /// <summary>
+        /// Registra un nuevo proyecto asignando al usuario en sesion como Product Owner.
+        /// Lo consume el CRUD del modulo ProyectoCreacion.
+        /// </summary>
+        public int CrearProyecto(Proyecto proyecto)
+        {
+            ValidarDatosMaestrosProyecto(proyecto);
+            ValidarFechas(proyecto);
+
+            if (_proyectoAD.ExisteClaveProyecto(proyecto.ClaveProyecto, null))
+            {
+                throw new InvalidOperationException($"La clave del proyecto '{proyecto.ClaveProyecto}' ya existe en el sistema. Debe ser única.");
+            }
+
+            int creadorId = SesionContextoLN.UsuarioActual?.UsuarioId
+                ?? throw new InvalidOperationException("No hay una sesión activa para registrar el creador del proyecto.");
+
+            return _proyectoAD.Agregar(proyecto, creadorId);
+        }
+
+        /// <summary>
+        /// Actualiza los datos maestros de un proyecto existente.
+        /// Lo consume el CRUD del modulo ProyectoCreacion.
+        /// </summary>
+        public void ActualizarProyecto(Proyecto proyecto)
+        {
+            ValidarDatosMaestrosProyecto(proyecto);
+            ValidarFechas(proyecto);
+
+            if (_proyectoAD.ExisteClaveProyecto(proyecto.ClaveProyecto, proyecto.ProyectoId))
+            {
+                throw new InvalidOperationException($"La clave del proyecto '{proyecto.ClaveProyecto}' ya está en uso por otro proyecto.");
+            }
+
+            _proyectoAD.Modificar(proyecto);
+        }
+
+        /// <summary>
+        /// Activa o desactiva (archiva) un proyecto.
+        /// </summary>
+        public void CambiarEstadoActivo(int proyectoId, bool esActivo)
+        {
+            if (proyectoId <= 0)
+            {
+                throw new ArgumentException("El ID del proyecto no es válido.");
+            }
+
+            _proyectoAD.CambiarEstadoActivo(proyectoId, esActivo);
+        }
+
+        /// <summary>
+        /// Lista todos los proyectos (activos e inactivos) para la gestion.
+        /// </summary>
+        public List<Proyecto> ListarProyectos() => _proyectoAD.ListarProyectos();
+
+        private static void ValidarFechas(Proyecto proyecto)
+        {
+            if (proyecto.FechaInicio == default(DateTime))
+            {
+                throw new ArgumentException("La fecha de inicio es obligatoria.");
+            }
+
+            if (proyecto.FechaFinEstimada.HasValue &&
+                proyecto.FechaFinEstimada.Value.Date < proyecto.FechaInicio.Date)
+            {
+                throw new ArgumentException("La fecha fin estimada no puede ser anterior a la fecha de inicio.");
+            }
+        }
+
+        /// <summary>
         /// Valida las reglas de datos maestros sobre el proyecto (Clave, Nombre y Metodología).
         /// </summary>
         public void ValidarDatosMaestrosProyecto(Proyecto proyecto)

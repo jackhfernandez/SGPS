@@ -120,6 +120,37 @@ namespace Datos
             return lista;
         }
 
+        // SELECT TODOS (CRUD ProyectoCreacion)
+        public List<Proyecto> ListarProyectos()
+        {
+            List<Proyecto> lista = new List<Proyecto>();
+
+            try
+            {
+                using (var cn = Conexion.ObtenerConexion())
+                {
+                    using (SqlCommand cmd = new SqlCommand("sp_Proyecto_Listar", cn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                lista.Add(MapearProyecto(dr));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error en la capa datos (Listar Proyectos): " + ex.Message);
+            }
+
+            return lista;
+        }
+
         // ASIGNAR MIEMBRO
         public void AsignarMiembro(int proyectoId, int usuarioId, string rolEnProyecto)
         {
@@ -148,7 +179,7 @@ namespace Datos
         // Metodos Adicionales - Reglas de Negocio
 
         // VERIFICAR UNICIDAD DE CLAVE
-        public bool ExisteClaveProyecto(string claveProyecto)
+        public bool ExisteClaveProyecto(string claveProyecto, int? excluirProyectoId = null)
         {
             bool existe = false;
 
@@ -156,13 +187,11 @@ namespace Datos
             {
                 using (var cn = Conexion.ObtenerConexion())
                 {
-                    string query = "SELECT COUNT(1) FROM dbo.Proyectos WHERE UPPER(ClaveProyecto) = UPPER(@claveProyecto)";
-                    using (SqlCommand cmd = new SqlCommand(query, cn))
+                    using (SqlCommand cmd = new SqlCommand("sp_Proyecto_ExisteClave", cn))
                     {
+                        cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddWithValue("@claveProyecto", claveProyecto.Trim());
-
-                        if (cn.State == ConnectionState.Closed)
-                            cn.Open();
+                        cmd.Parameters.AddWithValue("@excluirProyectoId", (object)excluirProyectoId ?? DBNull.Value);
 
                         int count = Convert.ToInt32(cmd.ExecuteScalar());
                         existe = count > 0;
@@ -306,18 +335,11 @@ namespace Datos
             {
                 using (var cn = Conexion.ObtenerConexion())
                 {
-                    string query = @"UPDATE dbo.Proyectos 
-                                     SET EsActivo = @esActivo, 
-                                         FechaFinReal = CASE WHEN @esActivo = 0 THEN GETDATE() ELSE NULL END 
-                                     WHERE ProyectoId = @proyectoId";
-
-                    using (SqlCommand cmd = new SqlCommand(query, cn))
+                    using (SqlCommand cmd = new SqlCommand("sp_Proyecto_CambiarEstado", cn))
                     {
+                        cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddWithValue("@proyectoId", proyectoId);
                         cmd.Parameters.AddWithValue("@esActivo", esActivo);
-
-                        if (cn.State == ConnectionState.Closed)
-                            cn.Open();
 
                         cmd.ExecuteNonQuery();
                     }
@@ -408,6 +430,23 @@ namespace Datos
             }
 
             return nuevoProyectoId;
+        }
+
+        private static Proyecto MapearProyecto(SqlDataReader dr)
+        {
+            return new Proyecto
+            {
+                ProyectoId = Convert.ToInt32(dr["ProyectoId"]),
+                ClaveProyecto = dr["ClaveProyecto"].ToString(),
+                NombreProyecto = dr["NombreProyecto"].ToString(),
+                Descripcion = dr["Descripcion"] != DBNull.Value ? dr["Descripcion"].ToString() : null,
+                Metodologia = dr["Metodologia"].ToString(),
+                FechaInicio = Convert.ToDateTime(dr["FechaInicio"]),
+                FechaFinEstimada = dr["FechaFinEstimada"] != DBNull.Value ? Convert.ToDateTime(dr["FechaFinEstimada"]) : (DateTime?)null,
+                FechaFinReal = dr["FechaFinReal"] != DBNull.Value ? Convert.ToDateTime(dr["FechaFinReal"]) : (DateTime?)null,
+                EsActivo = Convert.ToBoolean(dr["EsActivo"]),
+                FechaCreacion = Convert.ToDateTime(dr["FechaCreacion"])
+            };
         }
     }
 }
