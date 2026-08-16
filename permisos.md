@@ -1,9 +1,17 @@
 # Permisos y Accesos por Módulo
 
 Matriz de accesos por rol/módulo del SGPS. La fuente de verdad está en
-`Logica/PermisoLN.cs` (matriz `PermisoLN.Matriz`). Los menús de
-`Presentacion/Principal.cs` se muestran u ocultan según esta matriz, y cada
-módulo valida de nuevo el permiso antes de abrirse (defensa en profundidad).
+`Logica/PermisoLN.cs` (matriz `PermisoLN.Matriz`).
+
+La barra lateral de `Presentacion/Principal.cs` se genera a partir de la tabla
+declarativa `Presentacion/Ui/MapaNavegacion.cs`: cada entrada apunta a un valor
+de `Modulo`, y se muestra solo si `PermisoLN.PuedeVer(modulo)` es cierto (un
+grupo se ve si alguno de sus sub-ítems se ve). Al navegar, el módulo vuelve a
+validar el permiso antes de abrirse (defensa en profundidad).
+
+> Para dar de alta una pantalla nueva basta con añadir un `ItemNav` en
+> `MapaNavegacion.cs` y su fila en `PermisoLN.Matriz`; la barra lateral y las
+> tarjetas de la página de Resumen se actualizan solas.
 
 ## Niveles de acceso
 
@@ -46,7 +54,9 @@ módulo valida de nuevo el permiso antes de abrirse (defensa en profundidad).
 >   `MetricasAgilesVista` no estaban en la tabla original; se les asignó el
 >   mismo acceso que su módulo equivalente (Seguridad, Proyectos, Backlog,
 >   Sprint, Kanban y Reportes).
-> - `UcTarjetaKanban` es un control de tarjeta; mantiene el acceso de Kanban.
+> - `UcTarjetaKanban` es un control de tarjeta, no una pantalla: conserva su
+>   fila en la matriz (con el acceso de Kanban) pero **no aparece en la barra
+>   lateral**, porque se instancia desde `TableroKanban`.
 > - El acceso del Cliente al `ClientePortal` se modela como `Lectura` en
 >   `PermisoLN.cs` (la UI a futuro restringirá comentarios).
 > - Si un usuario tiene varios roles, se toma el mayor nivel de acceso.
