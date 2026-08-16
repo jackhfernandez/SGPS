@@ -125,5 +125,80 @@ namespace Logica
             List<UserStory> historias = _userStoryAD.ListarPorSprint(sprintId);
             return historias?.Sum(h => h.StoryPoints) ?? 0;
         }
+
+        /// <summary>
+        /// Sprints del proyecto ordenados por fecha de inicio (los mas recientes
+        /// primero), tal y como los devuelve sp_Sprint_ListarPorProyecto.
+        /// </summary>
+        public List<Sprint> ListarSprintsPorProyecto(int proyectoId)
+        {
+            return _sprintAD.ListarPorProyecto(proyectoId);
+        }
+
+        /// <summary>
+        /// Historias ya asignadas al Sprint Backlog de la iteracion.
+        /// </summary>
+        public List<UserStory> ListarHistoriasDelSprint(int sprintId)
+        {
+            return _sprintAD.ListarHistorias(sprintId);
+        }
+
+        /// <summary>
+        /// Historias del proyecto que aun pueden planificarse: sin Sprint
+        /// asignado y sin estado 'Done'.
+        /// </summary>
+        public List<UserStory> ListarBacklogDisponible(int proyectoId)
+        {
+            return _sprintAD.ListarBacklogDisponible(proyectoId);
+        }
+
+        /// <summary>
+        /// Mueve una historia del Product Backlog al Sprint Backlog. Solo es
+        /// valida si el Sprint sigue en 'Planificado' y la historia pertenece
+        /// al mismo proyecto (lo garantiza sp_Sprint_AsignarHistoria).
+        /// </summary>
+        public bool AsignarHistoriaASprint(int userStoryId, int sprintId, out string mensajeError)
+        {
+            mensajeError = string.Empty;
+
+            Sprint sprint = _sprintAD.ObtenerPorId(sprintId);
+            if (sprint == null)
+            {
+                mensajeError = "El Sprint especificado no existe.";
+                return false;
+            }
+
+            if (sprint.Estado != SprintEstadoConstantes.Planificado)
+            {
+                mensajeError = "Solo se pueden asignar historias a un Sprint en estado 'Planificado'.";
+                return false;
+            }
+
+            if (!_sprintAD.AsignarHistoriaASprint(userStoryId, sprintId))
+            {
+                mensajeError = "No se pudo asignar la historia. Verifica que pertenezca al proyecto del Sprint.";
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Devuelve una historia del Sprint Backlog al Product Backlog. Solo es
+        /// valida mientras el Sprint siga en 'Planificado': una vez iniciado o
+        /// cerrado la composicion del Sprint queda congelada.
+        /// </summary>
+        public bool QuitarHistoriaDeSprint(int userStoryId, out string mensajeError)
+        {
+            mensajeError = string.Empty;
+
+            if (!_sprintAD.QuitarHistoriaDeSprint(userStoryId))
+            {
+                mensajeError = "No se pudo quitar la historia. Solo es posible mientras el Sprint esté en estado 'Planificado'.";
+                return false;
+            }
+
+            return true;
+        }
     }
 }

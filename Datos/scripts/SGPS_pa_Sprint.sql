@@ -229,3 +229,123 @@ BEGIN
     OPTION (MAXRECURSION 366);
 END;
 GO
+
+-- ============================================================================
+-- 7. PROCEDIMIENTO ALMACENADO: Listar las historias del Sprint Backlog
+-- Devuelve las UserStories asignadas a un Sprint con el titulo del Epic y el
+-- nombre del usuario asignado, para que la planificacion muestre el desglose
+-- sin consultas adicionales.
+-- ============================================================================
+IF OBJECT_ID('sp_Sprint_ListarHistorias', 'P') IS NOT NULL
+    DROP PROCEDURE sp_Sprint_ListarHistorias;
+GO
+
+CREATE PROCEDURE sp_Sprint_ListarHistorias
+    @sprintId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        us.UserStoryId,
+        us.CodigoTicket,
+        us.ProyectoId,
+        us.EpicId,
+        us.SprintId,
+        us.Titulo,
+        us.ComoUsuario,
+        us.QuieroFuncionalidad,
+        us.ParaBeneficio,
+        us.CriteriosAceptacionTexto,
+        us.ValorNegocio,
+        us.StoryPoints,
+        us.Estado,
+        us.OrdenPrioridad,
+        us.UsuarioAsignadoId,
+        us.FechaCreacion,
+        us.FechaUltimaModificacion,
+        e.Titulo AS EpicNombre,
+        CONCAT(u.Nombres, ' ', u.Apellidos) AS UsuarioAsignadoNombre
+    FROM dbo.UserStories AS us
+    LEFT JOIN dbo.Epics AS e ON e.EpicId = us.EpicId
+    LEFT JOIN dbo.Usuarios AS u ON u.UsuarioId = us.UsuarioAsignadoId
+    WHERE us.SprintId = @sprintId
+    ORDER BY us.OrdenPrioridad ASC, us.CodigoTicket ASC;
+END;
+GO
+
+-- ============================================================================
+-- 8. PROCEDIMIENTO ALMACENADO: Listar el backlog disponible para planificar
+-- Historias del proyecto que todavia no estan asignadas a ningun Sprint
+-- (SprintId IS NULL) y que aun no estan 'Done'. Es la fuente del panel
+-- izquierdo de la planificacion de Sprint.
+-- ============================================================================
+IF OBJECT_ID('sp_Sprint_ListarBacklogDisponible', 'P') IS NOT NULL
+    DROP PROCEDURE sp_Sprint_ListarBacklogDisponible;
+GO
+
+CREATE PROCEDURE sp_Sprint_ListarBacklogDisponible
+    @proyectoId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        us.UserStoryId,
+        us.CodigoTicket,
+        us.ProyectoId,
+        us.EpicId,
+        us.SprintId,
+        us.Titulo,
+        us.ComoUsuario,
+        us.QuieroFuncionalidad,
+        us.ParaBeneficio,
+        us.CriteriosAceptacionTexto,
+        us.ValorNegocio,
+        us.StoryPoints,
+        us.Estado,
+        us.OrdenPrioridad,
+        us.UsuarioAsignadoId,
+        us.FechaCreacion,
+        us.FechaUltimaModificacion,
+        e.Titulo AS EpicNombre,
+        CONCAT(u.Nombres, ' ', u.Apellidos) AS UsuarioAsignadoNombre
+    FROM dbo.UserStories AS us
+    LEFT JOIN dbo.Epics AS e ON e.EpicId = us.EpicId
+    LEFT JOIN dbo.Usuarios AS u ON u.UsuarioId = us.UsuarioAsignadoId
+    WHERE us.ProyectoId = @proyectoId
+      AND us.SprintId IS NULL
+      AND us.Estado <> 'Done'
+    ORDER BY us.OrdenPrioridad ASC, us.CodigoTicket ASC;
+END;
+GO
+
+-- ============================================================================
+-- 9. PROCEDIMIENTO ALMACENADO: Quitar una historia del Sprint Backlog
+-- Devuelve la historia al backlog (SprintId = NULL). El INNER JOIN restringe
+-- la operacion a Sprints en estado 'Planificado': una vez iniciado o cerrado
+-- el Sprint su composicion queda congelada y la operacion no afecta filas
+-- (el AD devuelve false).
+-- ============================================================================
+IF OBJECT_ID('sp_Sprint_QuitarHistoria', 'P') IS NOT NULL
+    DROP PROCEDURE sp_Sprint_QuitarHistoria;
+GO
+
+CREATE PROCEDURE sp_Sprint_QuitarHistoria
+    @userStoryId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE us
+    SET us.SprintId                = NULL,
+        us.FechaUltimaModificacion = GETDATE()
+    FROM dbo.UserStories AS us
+    INNER JOIN dbo.Sprints AS s
+        ON s.SprintId = us.SprintId
+    WHERE us.UserStoryId = @userStoryId
+      AND s.Estado = 'Planificado';
+
+    SELECT @@ROWCOUNT AS FilasAfectadas;
+END;
+GO

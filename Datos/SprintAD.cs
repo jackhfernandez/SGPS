@@ -150,6 +150,102 @@ namespace Datos
             return serie;
         }
 
+        /// <summary>
+        /// Historias asignadas al Sprint Backlog. Incluye el titulo del Epic y
+        /// el nombre del usuario asignado (joins de sp_Sprint_ListarHistorias).
+        /// </summary>
+        public List<UserStory> ListarHistorias(int sprintId)
+        {
+            List<UserStory> lista = new List<UserStory>();
+
+            try
+            {
+                using (var cn = Conexion.ObtenerConexion())
+                {
+                    using (SqlCommand cmd = new SqlCommand("sp_Sprint_ListarHistorias", cn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@sprintId", sprintId);
+
+                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                lista.Add(MapearUserStory(dr));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error en la capa datos (Listar Historias del Sprint): " + ex.Message);
+            }
+
+            return lista;
+        }
+
+        /// <summary>
+        /// Historias del proyecto aun sin asignar a ningun Sprint y sin cerrar:
+        /// son las candidatas para el Sprint Backlog de la planificacion.
+        /// </summary>
+        public List<UserStory> ListarBacklogDisponible(int proyectoId)
+        {
+            List<UserStory> lista = new List<UserStory>();
+
+            try
+            {
+                using (var cn = Conexion.ObtenerConexion())
+                {
+                    using (SqlCommand cmd = new SqlCommand("sp_Sprint_ListarBacklogDisponible", cn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@proyectoId", proyectoId);
+
+                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                lista.Add(MapearUserStory(dr));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error en la capa datos (Listar Backlog Disponible): " + ex.Message);
+            }
+
+            return lista;
+        }
+
+        /// <summary>
+        /// Devuelve una historia del Sprint Backlog al Product Backlog
+        /// (SprintId = NULL). Solo funciona si el Sprint sigue 'Planificado':
+        /// la guarda vive en el WHERE de sp_Sprint_QuitarHistoria.
+        /// </summary>
+        public bool QuitarHistoriaDeSprint(int userStoryId)
+        {
+            try
+            {
+                using (var cn = Conexion.ObtenerConexion())
+                {
+                    using (SqlCommand cmd = new SqlCommand("sp_Sprint_QuitarHistoria", cn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@userStoryId", userStoryId);
+
+                        return LeerFilasAfectadas(cmd) > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error en la capa datos (Quitar Historia del Sprint): " + ex.Message);
+            }
+        }
+
         // SELECT (Sprint activo del proyecto, o null si no hay ninguno)
         public Sprint? ObtenerSprintActivo(int proyectoId)
         {
@@ -236,6 +332,32 @@ namespace Datos
                 Estado = dr["Estado"].ToString() ?? SprintEstadoConstantes.Planificado,
                 FechaCreacion = Convert.ToDateTime(dr["FechaCreacion"]),
                 ProyectoNombre = dr["NombreProyecto"] != DBNull.Value ? dr["NombreProyecto"].ToString() : null
+            };
+        }
+
+        private static UserStory MapearUserStory(SqlDataReader dr)
+        {
+            return new UserStory
+            {
+                UserStoryId = Convert.ToInt32(dr["UserStoryId"]),
+                CodigoTicket = dr["CodigoTicket"].ToString() ?? string.Empty,
+                ProyectoId = Convert.ToInt32(dr["ProyectoId"]),
+                EpicId = dr["EpicId"] != DBNull.Value ? Convert.ToInt32(dr["EpicId"]) : (int?)null,
+                SprintId = dr["SprintId"] != DBNull.Value ? Convert.ToInt32(dr["SprintId"]) : (int?)null,
+                Titulo = dr["Titulo"].ToString() ?? string.Empty,
+                ComoUsuario = dr["ComoUsuario"].ToString() ?? string.Empty,
+                QuieroFuncionalidad = dr["QuieroFuncionalidad"].ToString() ?? string.Empty,
+                ParaBeneficio = dr["ParaBeneficio"].ToString() ?? string.Empty,
+                CriteriosAceptacionTexto = dr["CriteriosAceptacionTexto"] != DBNull.Value ? dr["CriteriosAceptacionTexto"].ToString() : null,
+                ValorNegocio = dr["ValorNegocio"].ToString() ?? "Medio",
+                StoryPoints = Convert.ToInt32(dr["StoryPoints"]),
+                Estado = dr["Estado"].ToString() ?? "To Do",
+                OrdenPrioridad = Convert.ToInt32(dr["OrdenPrioridad"]),
+                UsuarioAsignadoId = dr["UsuarioAsignadoId"] != DBNull.Value ? Convert.ToInt32(dr["UsuarioAsignadoId"]) : (int?)null,
+                FechaCreacion = Convert.ToDateTime(dr["FechaCreacion"]),
+                FechaUltimaModificacion = Convert.ToDateTime(dr["FechaUltimaModificacion"]),
+                EpicNombre = dr["EpicNombre"] != DBNull.Value ? dr["EpicNombre"].ToString() : null,
+                UsuarioAsignadoNombre = dr["UsuarioAsignadoNombre"] != DBNull.Value ? dr["UsuarioAsignadoNombre"].ToString() : null
             };
         }
 
