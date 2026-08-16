@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Modelo;
 using System.Data;
 
@@ -53,15 +53,12 @@ public class UsuarioAD
 
     public List<Usuario> ListarUsuarios()
     {
-        const string consulta = """
-            SELECT u.UsuarioId, u.Nombres, u.Apellidos, u.Email, u.PasswordHash, u.PasswordSalt,
-                   u.EsActivo, u.FechaRegistro, u.UltimoAcceso
-            FROM dbo.Usuarios AS u
-            ORDER BY u.Nombres, u.Apellidos;
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
+        using var comando = new SqlCommand("sp_Usuario_Listar", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+
         using var lector = comando.ExecuteReader();
 
         var usuarios = new List<Usuario>();
@@ -75,15 +72,12 @@ public class UsuarioAD
 
     public Dictionary<int, List<Rol>> ObtenerRolesDeTodosLosUsuarios()
     {
-        const string consulta = """
-            SELECT ur.UsuarioId, r.RolId, r.NombreRol, r.Descripcion
-            FROM dbo.UsuarioRoles AS ur
-            INNER JOIN dbo.Roles AS r ON r.RolId = ur.RolId
-            ORDER BY ur.UsuarioId, r.NombreRol;
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
+        using var comando = new SqlCommand("sp_Usuario_ListarRoles", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+
         using var lector = comando.ExecuteReader();
 
         var rolesPorUsuario = new Dictionary<int, List<Rol>>();
@@ -114,93 +108,74 @@ public class UsuarioAD
 
     public int CrearUsuario(Usuario usuario, string passwordHash, string passwordSalt)
     {
-        const string consulta = """
-            INSERT INTO dbo.Usuarios (Nombres, Apellidos, Email, PasswordHash, PasswordSalt, EsActivo)
-            OUTPUT INSERTED.UsuarioId
-            VALUES (@Nombres, @Apellidos, @Email, @PasswordHash, @PasswordSalt, @EsActivo);
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
-        comando.Parameters.Add("@Nombres", SqlDbType.VarChar, 100).Value = usuario.Nombres;
-        comando.Parameters.Add("@Apellidos", SqlDbType.VarChar, 100).Value = usuario.Apellidos;
-        comando.Parameters.Add("@Email", SqlDbType.VarChar, 150).Value = usuario.Email;
-        comando.Parameters.Add("@PasswordHash", SqlDbType.VarChar, 256).Value = passwordHash;
-        comando.Parameters.Add("@PasswordSalt", SqlDbType.VarChar, 256).Value = passwordSalt;
-        comando.Parameters.Add("@EsActivo", SqlDbType.Bit).Value = usuario.EsActivo;
+        using var comando = new SqlCommand("sp_Usuario_Insertar", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+        comando.Parameters.Add("@nombres", SqlDbType.VarChar, 100).Value = usuario.Nombres;
+        comando.Parameters.Add("@apellidos", SqlDbType.VarChar, 100).Value = usuario.Apellidos;
+        comando.Parameters.Add("@email", SqlDbType.VarChar, 150).Value = usuario.Email;
+        comando.Parameters.Add("@passwordHash", SqlDbType.VarChar, 256).Value = passwordHash;
+        comando.Parameters.Add("@passwordSalt", SqlDbType.VarChar, 256).Value = passwordSalt;
+        comando.Parameters.Add("@esActivo", SqlDbType.Bit).Value = usuario.EsActivo;
 
         return Convert.ToInt32(comando.ExecuteScalar());
     }
 
     public void ActualizarUsuario(Usuario usuario)
     {
-        const string consulta = """
-            UPDATE dbo.Usuarios
-            SET Nombres = @Nombres,
-                Apellidos = @Apellidos,
-                Email = @Email,
-                EsActivo = @EsActivo
-            WHERE UsuarioId = @UsuarioId;
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
-        comando.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuario.UsuarioId;
-        comando.Parameters.Add("@Nombres", SqlDbType.VarChar, 100).Value = usuario.Nombres;
-        comando.Parameters.Add("@Apellidos", SqlDbType.VarChar, 100).Value = usuario.Apellidos;
-        comando.Parameters.Add("@Email", SqlDbType.VarChar, 150).Value = usuario.Email;
-        comando.Parameters.Add("@EsActivo", SqlDbType.Bit).Value = usuario.EsActivo;
+        using var comando = new SqlCommand("sp_Usuario_Modificar", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+        comando.Parameters.Add("@usuarioId", SqlDbType.Int).Value = usuario.UsuarioId;
+        comando.Parameters.Add("@nombres", SqlDbType.VarChar, 100).Value = usuario.Nombres;
+        comando.Parameters.Add("@apellidos", SqlDbType.VarChar, 100).Value = usuario.Apellidos;
+        comando.Parameters.Add("@email", SqlDbType.VarChar, 150).Value = usuario.Email;
+        comando.Parameters.Add("@esActivo", SqlDbType.Bit).Value = usuario.EsActivo;
 
         comando.ExecuteNonQuery();
     }
 
     public void CambiarEstado(int usuarioId, bool esActivo)
     {
-        const string consulta = """
-            UPDATE dbo.Usuarios
-            SET EsActivo = @EsActivo
-            WHERE UsuarioId = @UsuarioId;
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
-        comando.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
-        comando.Parameters.Add("@EsActivo", SqlDbType.Bit).Value = esActivo;
+        using var comando = new SqlCommand("sp_Usuario_CambiarEstado", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+        comando.Parameters.Add("@usuarioId", SqlDbType.Int).Value = usuarioId;
+        comando.Parameters.Add("@esActivo", SqlDbType.Bit).Value = esActivo;
 
         comando.ExecuteNonQuery();
     }
 
     public void ActualizarPassword(int usuarioId, string passwordHash, string passwordSalt)
     {
-        const string consulta = """
-            UPDATE dbo.Usuarios
-            SET PasswordHash = @PasswordHash,
-                PasswordSalt = @PasswordSalt
-            WHERE UsuarioId = @UsuarioId;
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
-        comando.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
-        comando.Parameters.Add("@PasswordHash", SqlDbType.VarChar, 256).Value = passwordHash;
-        comando.Parameters.Add("@PasswordSalt", SqlDbType.VarChar, 256).Value = passwordSalt;
+        using var comando = new SqlCommand("sp_Usuario_ActualizarPassword", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+        comando.Parameters.Add("@usuarioId", SqlDbType.Int).Value = usuarioId;
+        comando.Parameters.Add("@passwordHash", SqlDbType.VarChar, 256).Value = passwordHash;
+        comando.Parameters.Add("@passwordSalt", SqlDbType.VarChar, 256).Value = passwordSalt;
 
         comando.ExecuteNonQuery();
     }
 
     public bool ExisteEmail(string email, int? excluirUsuarioId = null)
     {
-        const string consulta = """
-            SELECT COUNT(1)
-            FROM dbo.Usuarios
-            WHERE Email = LTRIM(RTRIM(@Email))
-              AND (@ExcluirId IS NULL OR UsuarioId <> @ExcluirId);
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
-        comando.Parameters.Add("@Email", SqlDbType.VarChar, 150).Value = email.Trim();
-        comando.Parameters.Add("@ExcluirId", SqlDbType.Int).Value = (object?)excluirUsuarioId ?? DBNull.Value;
+        using var comando = new SqlCommand("sp_Usuario_ExisteEmail", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+        comando.Parameters.Add("@email", SqlDbType.VarChar, 150).Value = email.Trim();
+        comando.Parameters.Add("@excluirUsuarioId", SqlDbType.Int).Value =
+            (object?)excluirUsuarioId ?? DBNull.Value;
 
         return Convert.ToInt32(comando.ExecuteScalar()) > 0;
     }
@@ -208,35 +183,15 @@ public class UsuarioAD
     public void AsignarRoles(int usuarioId, ICollection<int> rolIds)
     {
         using var conexion = Conexion.ObtenerConexion();
-        using var transaccion = conexion.BeginTransaction();
-
-        try
+        using var comando = new SqlCommand("sp_Usuario_AsignarRoles", conexion)
         {
-            using (var eliminar = new SqlCommand(
-                "DELETE FROM dbo.UsuarioRoles WHERE UsuarioId = @UsuarioId;",
-                conexion, transaccion))
-            {
-                eliminar.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
-                eliminar.ExecuteNonQuery();
-            }
+            CommandType = CommandType.StoredProcedure
+        };
+        comando.Parameters.Add("@usuarioId", SqlDbType.Int).Value = usuarioId;
+        comando.Parameters.Add("@rolIds", SqlDbType.VarChar, -1).Value =
+            string.Join(",", rolIds ?? Array.Empty<int>());
 
-            foreach (var rolId in rolIds)
-            {
-                using var insertar = new SqlCommand(
-                    "INSERT INTO dbo.UsuarioRoles (UsuarioId, RolId) VALUES (@UsuarioId, @RolId);",
-                    conexion, transaccion);
-                insertar.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
-                insertar.Parameters.Add("@RolId", SqlDbType.Int).Value = rolId;
-                insertar.ExecuteNonQuery();
-            }
-
-            transaccion.Commit();
-        }
-        catch
-        {
-            transaccion.Rollback();
-            throw;
-        }
+        comando.ExecuteNonQuery();
     }
 
     private static Usuario MapearUsuario(SqlDataReader lector)

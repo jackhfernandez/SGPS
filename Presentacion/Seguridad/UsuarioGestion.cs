@@ -15,6 +15,7 @@ public partial class UsuarioGestion : Form
 
     private readonly Dictionary<int, CheckBox> _rolesCheckboxes = new();
     private Dictionary<int, List<Rol>> _rolesPorUsuario = new();
+    private bool _modoAlta;
 
     public UsuarioGestion()
     {
@@ -99,7 +100,7 @@ public partial class UsuarioGestion : Form
         dgvUsuarios.Columns.Add("Email", "Correo electrónico");
         dgvUsuarios.Columns.Add("Roles", "Roles");
         dgvUsuarios.Columns.Add("Activo", "Activo");
-        dgvUsuarios.Columns.Add("FechaRegistro", "Registro");
+        dgvUsuarios.Columns.Add("Registro", "Registro");
 
         dgvUsuarios.Columns["UsuarioId"]!.Width = 45;
         dgvUsuarios.Columns["UsuarioId"]!.Visible = false;
@@ -108,7 +109,7 @@ public partial class UsuarioGestion : Form
         dgvUsuarios.Columns["Email"]!.Width = 185;
         dgvUsuarios.Columns["Roles"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
         dgvUsuarios.Columns["Activo"]!.Width = 70;
-        dgvUsuarios.Columns["FechaRegistro"]!.Width = 90;
+        dgvUsuarios.Columns["Registro"]!.Width = 90;
 
         foreach (var usuario in usuarios)
         {
@@ -125,6 +126,11 @@ public partial class UsuarioGestion : Form
                 usuario.EsActivo ? "Sí" : "No",
                 usuario.FechaRegistro.ToShortDateString());
 
+            if (!usuario.EsActivo)
+            {
+                dgvUsuarios.Rows[indice].DefaultCellStyle.ForeColor = Color.FromArgb(150, 150, 150);
+            }
+
             dgvUsuarios.Rows[indice].Tag = usuario;
         }
 
@@ -132,13 +138,24 @@ public partial class UsuarioGestion : Form
         {
             SeleccionarUsuario(idSeleccionado.Value);
         }
-
-        ActualizarCasillasRoles();
+        else
+        {
+            LimpiarEditor();
+        }
     }
 
     private void dgvUsuarios_SelectionChanged(object sender, EventArgs e)
     {
-        ActualizarCasillasRoles();
+        if (dgvUsuarios.CurrentRow?.Tag is Usuario usuario)
+        {
+            txtNombres.Text = usuario.Nombres;
+            txtApellidos.Text = usuario.Apellidos;
+            txtEmail.Text = usuario.Email;
+            txtPassword.Text = string.Empty;
+            _modoAlta = false;
+            ActualizarCasillasRoles();
+            ActualizarEstadoBotones();
+        }
     }
 
     private void ActualizarCasillasRoles()
@@ -159,12 +176,20 @@ public partial class UsuarioGestion : Form
         }
     }
 
-    private void btnGuardarRoles_Click(object sender, EventArgs e)
+    private void btnNuevo_Click(object sender, EventArgs e)
     {
-        if (dgvUsuarios.CurrentRow?.Tag is not Usuario usuario)
+        LimpiarEditor();
+        _modoAlta = true;
+        ActualizarEstadoBotones();
+        txtNombres.Focus();
+    }
+
+    private void btnAgregar_Click(object sender, EventArgs e)
+    {
+        if (!_modoAlta)
         {
             MessageBox.Show(
-                "Selecciona un usuario para asignarle roles.",
+                "Presiona 'Nuevo' para preparar el formulario y luego 'Agregar'.",
                 "Aviso",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
@@ -173,53 +198,23 @@ public partial class UsuarioGestion : Form
 
         try
         {
-            var rolIds = _rolesCheckboxes.Where(c => c.Value.Checked).Select(c => c.Key).ToList();
-
-            _usuarioLN.AsignarRoles(usuario.UsuarioId, rolIds);
-            CargarUsuarios();
-            SeleccionarUsuario(usuario.UsuarioId);
-
-            MessageBox.Show(
-                "Roles del usuario actualizados correctamente.",
-                "Éxito",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                $"No se pudieron guardar los roles: {ex.Message}",
-                "Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-        }
-    }
-
-    private void btnNuevo_Click(object sender, EventArgs e)
-    {
-        using var dialogo = new UsuarioNuevo();
-
-        if (dialogo.ShowDialog(this) != DialogResult.OK)
-        {
-            return;
-        }
-
-        try
-        {
             var usuario = new Usuario
             {
-                Nombres = dialogo.Nombres,
-                Apellidos = dialogo.Apellidos,
-                Email = dialogo.Email,
+                Nombres = txtNombres.Text.Trim(),
+                Apellidos = txtApellidos.Text.Trim(),
+                Email = txtEmail.Text.Trim(),
                 EsActivo = true
             };
 
-            var nuevoId = _usuarioLN.CrearUsuario(usuario, dialogo.Password);
+            var nuevoId = _usuarioLN.CrearUsuario(usuario, txtPassword.Text);
+            _usuarioLN.AsignarRoles(nuevoId, ObtenerRolIdsMarcados());
+
+            _modoAlta = false;
             CargarUsuarios();
             SeleccionarUsuario(nuevoId);
 
             MessageBox.Show(
-                "Usuario creado correctamente. Asigna sus roles en el panel derecho.",
+                "Usuario creado correctamente con sus roles asignados.",
                 "Éxito",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
@@ -234,12 +229,12 @@ public partial class UsuarioGestion : Form
         }
     }
 
-    private void btnEstado_Click(object sender, EventArgs e)
+    private void btnModificar_Click(object sender, EventArgs e)
     {
         if (dgvUsuarios.CurrentRow?.Tag is not Usuario usuario)
         {
             MessageBox.Show(
-                "Selecciona un usuario para cambiar su estado.",
+                "Selecciona un usuario para modificar.",
                 "Aviso",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
@@ -248,9 +243,66 @@ public partial class UsuarioGestion : Form
 
         try
         {
-            var nuevoEstado = !usuario.EsActivo;
+            usuario.Nombres = txtNombres.Text.Trim();
+            usuario.Apellidos = txtApellidos.Text.Trim();
+            usuario.Email = txtEmail.Text.Trim();
 
+            _usuarioLN.ActualizarUsuario(usuario);
+
+            if (!string.IsNullOrWhiteSpace(txtPassword.Text))
+            {
+                _usuarioLN.RestablecerPassword(usuario.UsuarioId, txtPassword.Text);
+            }
+
+            _usuarioLN.AsignarRoles(usuario.UsuarioId, ObtenerRolIdsMarcados());
+
+            CargarUsuarios();
+            SeleccionarUsuario(usuario.UsuarioId);
+
+            MessageBox.Show(
+                "Usuario actualizado correctamente con sus roles asignados.",
+                "Éxito",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"No se pudo modificar el usuario: {ex.Message}",
+                "Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+    }
+
+    private void btnDesactivar_Click(object sender, EventArgs e)
+    {
+        if (dgvUsuarios.CurrentRow?.Tag is not Usuario usuario)
+        {
+            MessageBox.Show(
+                "Selecciona un usuario para activar o desactivar.",
+                "Aviso",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+            return;
+        }
+
+        var nuevoEstado = !usuario.EsActivo;
+        var confirmacion = MessageBox.Show(
+            $"¿{(nuevoEstado ? "Activar" : "Desactivar")} al usuario '{usuario.NombreCompleto}'?",
+            "Confirmar cambio de estado",
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question);
+
+        if (confirmacion != DialogResult.Yes)
+        {
+            return;
+        }
+
+        try
+        {
             _usuarioLN.CambiarEstadoActivo(usuario.UsuarioId, nuevoEstado);
+
             CargarUsuarios();
             SeleccionarUsuario(usuario.UsuarioId);
 
@@ -263,28 +315,40 @@ public partial class UsuarioGestion : Form
         catch (Exception ex)
         {
             MessageBox.Show(
-                $"No se pudo cambiar el estado: {ex.Message}",
+                $"No se pudo cambiar el estado del usuario: {ex.Message}",
                 "Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }
     }
 
-    private void btnRefrescar_Click(object sender, EventArgs e)
+    private void btnLimpiar_Click(object sender, EventArgs e)
     {
-        try
+        LimpiarEditor();
+        ActualizarEstadoBotones();
+        txtNombres.Focus();
+    }
+
+    private void btnCancelar_Click(object sender, EventArgs e) => Close();
+
+    private List<int> ObtenerRolIdsMarcados() =>
+        _rolesCheckboxes.Where(c => c.Value.Checked).Select(c => c.Key).ToList();
+
+    private void LimpiarEditor()
+    {
+        txtNombres.Text = string.Empty;
+        txtApellidos.Text = string.Empty;
+        txtEmail.Text = string.Empty;
+        txtPassword.Text = string.Empty;
+        _modoAlta = false;
+
+        foreach (var casilla in _rolesCheckboxes.Values)
         {
-            CargarRolesDisponibles();
-            CargarUsuarios();
+            casilla.Checked = false;
         }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                $"No se pudieron refrescar los datos: {ex.Message}",
-                "Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-        }
+
+        dgvUsuarios.ClearSelection();
+        ActualizarEstadoBotones();
     }
 
     private void SeleccionarUsuario(int usuarioId)
@@ -293,9 +357,22 @@ public partial class UsuarioGestion : Form
         {
             if (fila.Tag is Usuario usuario && usuario.UsuarioId == usuarioId)
             {
-                dgvUsuarios.CurrentCell = fila.Cells[0];
-                return;
+                for (var indice = 0; indice < fila.Cells.Count; indice++)
+                {
+                    if (fila.Cells[indice].Visible)
+                    {
+                        dgvUsuarios.CurrentCell = fila.Cells[indice];
+                        return;
+                    }
+                }
             }
         }
+    }
+
+    private void ActualizarEstadoBotones()
+    {
+        btnAgregar.Enabled = _modoAlta;
+        btnModificar.Enabled = dgvUsuarios.CurrentRow?.Tag is Usuario;
+        btnDesactivar.Enabled = dgvUsuarios.CurrentRow?.Tag is Usuario;
     }
 }

@@ -1,4 +1,4 @@
-using Datos;
+﻿using Datos;
 using Modelo;
 
 namespace Logica;
@@ -54,13 +54,15 @@ public class RolLN
         _rolAD.ActualizarRol(rol);
     }
 
-    public void EliminarRol(int rolId)
+    public void CambiarEstado(int rolId, bool esActivo)
     {
-        if (_rolAD.TieneUsuariosAsignados(rolId))
+        if (rolId <= 0)
         {
-            throw new InvalidOperationException("No se puede eliminar un rol que está asignado a uno o más usuarios.");
+            throw new ArgumentException("El identificador del rol no es válido.");
         }
 
-        _rolAD.EliminarRol(rolId);
+        _rolAD.CambiarEstado(rolId, esActivo);
     }
+
+    public bool TieneUsuariosAsignados(int rolId) => _rolAD.TieneUsuariosAsignados(rolId);
 }

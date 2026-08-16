@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Modelo;
 using System.Data;
 
@@ -8,30 +8,19 @@ public class RolAD
 {
     public List<Rol> ListarRoles()
     {
-        const string consulta = """
-            SELECT r.RolId, r.NombreRol, r.Descripcion, r.FechaCreacion
-            FROM dbo.Roles AS r
-            ORDER BY r.NombreRol;
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
+        using var comando = new SqlCommand("sp_Rol_Listar", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+
         using var lector = comando.ExecuteReader();
 
         var roles = new List<Rol>();
 
         while (lector.Read())
         {
-            var descripcionOrdinal = lector.GetOrdinal("Descripcion");
-            roles.Add(new Rol
-            {
-                RolId = lector.GetInt32(lector.GetOrdinal("RolId")),
-                NombreRol = lector.GetString(lector.GetOrdinal("NombreRol")),
-                Descripcion = lector.IsDBNull(descripcionOrdinal)
-                    ? string.Empty
-                    : lector.GetString(descripcionOrdinal),
-                FechaCreacion = lector.GetDateTime(lector.GetOrdinal("FechaCreacion"))
-            });
+            roles.Add(MapearRol(lector));
         }
 
         return roles;
@@ -39,14 +28,12 @@ public class RolAD
 
     public Dictionary<int, int> ObtenerConteoUsuariosPorRol()
     {
-        const string consulta = """
-            SELECT ur.RolId, COUNT(1) AS Conteo
-            FROM dbo.UsuarioRoles AS ur
-            GROUP BY ur.RolId;
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
+        using var comando = new SqlCommand("sp_Rol_ConteoUsuarios", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+
         using var lector = comando.ExecuteReader();
 
         var conteos = new Dictionary<int, int>();
@@ -61,16 +48,13 @@ public class RolAD
 
     public int CrearRol(Rol rol)
     {
-        const string consulta = """
-            INSERT INTO dbo.Roles (NombreRol, Descripcion)
-            OUTPUT INSERTED.RolId
-            VALUES (@NombreRol, @Descripcion);
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
-        comando.Parameters.Add("@NombreRol", SqlDbType.VarChar, 50).Value = rol.NombreRol;
-        comando.Parameters.Add("@Descripcion", SqlDbType.VarChar, 255).Value =
+        using var comando = new SqlCommand("sp_Rol_Insertar", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+        comando.Parameters.Add("@nombreRol", SqlDbType.VarChar, 50).Value = rol.NombreRol;
+        comando.Parameters.Add("@descripcion", SqlDbType.VarChar, 255).Value =
             (object?)rol.Descripcion ?? DBNull.Value;
 
         return Convert.ToInt32(comando.ExecuteScalar());
@@ -78,63 +62,71 @@ public class RolAD
 
     public void ActualizarRol(Rol rol)
     {
-        const string consulta = """
-            UPDATE dbo.Roles
-            SET NombreRol = @NombreRol,
-                Descripcion = @Descripcion
-            WHERE RolId = @RolId;
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
-        comando.Parameters.Add("@RolId", SqlDbType.Int).Value = rol.RolId;
-        comando.Parameters.Add("@NombreRol", SqlDbType.VarChar, 50).Value = rol.NombreRol;
-        comando.Parameters.Add("@Descripcion", SqlDbType.VarChar, 255).Value =
+        using var comando = new SqlCommand("sp_Rol_Modificar", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+        comando.Parameters.Add("@rolId", SqlDbType.Int).Value = rol.RolId;
+        comando.Parameters.Add("@nombreRol", SqlDbType.VarChar, 50).Value = rol.NombreRol;
+        comando.Parameters.Add("@descripcion", SqlDbType.VarChar, 255).Value =
             (object?)rol.Descripcion ?? DBNull.Value;
 
         comando.ExecuteNonQuery();
     }
 
-    public void EliminarRol(int rolId)
+    public void CambiarEstado(int rolId, bool esActivo)
     {
-        const string consulta = "DELETE FROM dbo.Roles WHERE RolId = @RolId;";
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
-        comando.Parameters.Add("@RolId", SqlDbType.Int).Value = rolId;
+        using var comando = new SqlCommand("sp_Rol_CambiarEstado", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+        comando.Parameters.Add("@rolId", SqlDbType.Int).Value = rolId;
+        comando.Parameters.Add("@esActivo", SqlDbType.Bit).Value = esActivo;
 
         comando.ExecuteNonQuery();
     }
 
     public bool ExisteNombre(string nombre, int? excluirRolId = null)
     {
-        const string consulta = """
-            SELECT COUNT(1)
-            FROM dbo.Roles
-            WHERE NombreRol = LTRIM(RTRIM(@NombreRol))
-              AND (@ExcluirId IS NULL OR RolId <> @ExcluirId);
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
-        comando.Parameters.Add("@NombreRol", SqlDbType.VarChar, 50).Value = nombre.Trim();
-        comando.Parameters.Add("@ExcluirId", SqlDbType.Int).Value = (object?)excluirRolId ?? DBNull.Value;
+        using var comando = new SqlCommand("sp_Rol_ExisteNombre", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+        comando.Parameters.Add("@nombreRol", SqlDbType.VarChar, 50).Value = nombre.Trim();
+        comando.Parameters.Add("@excluirRolId", SqlDbType.Int).Value =
+            (object?)excluirRolId ?? DBNull.Value;
 
         return Convert.ToInt32(comando.ExecuteScalar()) > 0;
     }
 
     public bool TieneUsuariosAsignados(int rolId)
     {
-        const string consulta = """
-            SELECT COUNT(1)
-            FROM dbo.UsuarioRoles
-            WHERE RolId = @RolId;
-            """;
-
         using var conexion = Conexion.ObtenerConexion();
-        using var comando = new SqlCommand(consulta, conexion);
-        comando.Parameters.Add("@RolId", SqlDbType.Int).Value = rolId;
+        using var comando = new SqlCommand("sp_Rol_TieneUsuarios", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+        comando.Parameters.Add("@rolId", SqlDbType.Int).Value = rolId;
 
         return Convert.ToInt32(comando.ExecuteScalar()) > 0;
+    }
+
+    private static Rol MapearRol(SqlDataReader lector)
+    {
+        var descripcionOrdinal = lector.GetOrdinal("Descripcion");
+
+        return new Rol
+        {
+            RolId = lector.GetInt32(lector.GetOrdinal("RolId")),
+            NombreRol = lector.GetString(lector.GetOrdinal("NombreRol")),
+            Descripcion = lector.IsDBNull(descripcionOrdinal)
+                ? string.Empty
+                : lector.GetString(descripcionOrdinal),
+            EsActivo = lector.GetBoolean(lector.GetOrdinal("EsActivo")),
+            FechaCreacion = lector.GetDateTime(lector.GetOrdinal("FechaCreacion"))
+        };
     }
 }

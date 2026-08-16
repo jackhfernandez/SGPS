@@ -30,8 +30,10 @@ partial class RolGestion
     {
         panelEditor = new Panel();
         btnCancelar = new Button();
-        btnEliminar = new Button();
-        btnGuardar = new Button();
+        btnLimpiar = new Button();
+        btnDesactivar = new Button();
+        btnModificar = new Button();
+        btnAgregar = new Button();
         btnNuevo = new Button();
         txtDescripcion = new TextBox();
         lblDescripcion = new Label();
@@ -46,8 +48,10 @@ partial class RolGestion
         // 
         panelEditor.BackColor = Color.FromArgb(245, 241, 232);
         panelEditor.Controls.Add(btnCancelar);
-        panelEditor.Controls.Add(btnEliminar);
-        panelEditor.Controls.Add(btnGuardar);
+        panelEditor.Controls.Add(btnLimpiar);
+        panelEditor.Controls.Add(btnDesactivar);
+        panelEditor.Controls.Add(btnModificar);
+        panelEditor.Controls.Add(btnAgregar);
         panelEditor.Controls.Add(btnNuevo);
         panelEditor.Controls.Add(txtDescripcion);
         panelEditor.Controls.Add(lblDescripcion);
@@ -109,43 +113,73 @@ partial class RolGestion
         btnNuevo.FlatStyle = FlatStyle.Flat;
         btnNuevo.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         btnNuevo.ForeColor = Color.White;
-        btnNuevo.Location = new Point(420, 18);
+        btnNuevo.Location = new Point(410, 18);
         btnNuevo.Name = "btnNuevo";
-        btnNuevo.Size = new Size(110, 36);
+        btnNuevo.Size = new Size(100, 36);
         btnNuevo.TabIndex = 4;
         btnNuevo.Text = "Nuevo";
         btnNuevo.UseVisualStyleBackColor = false;
         btnNuevo.Click += btnNuevo_Click;
         // 
-        // btnGuardar
+        // btnAgregar
         // 
-        btnGuardar.BackColor = Color.FromArgb(12, 110, 99);
-        btnGuardar.FlatAppearance.BorderSize = 0;
-        btnGuardar.FlatStyle = FlatStyle.Flat;
-        btnGuardar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        btnGuardar.ForeColor = Color.White;
-        btnGuardar.Location = new Point(545, 18);
-        btnGuardar.Name = "btnGuardar";
-        btnGuardar.Size = new Size(110, 36);
-        btnGuardar.TabIndex = 5;
-        btnGuardar.Text = "Guardar";
-        btnGuardar.UseVisualStyleBackColor = false;
-        btnGuardar.Click += btnGuardar_Click;
+        btnAgregar.BackColor = Color.FromArgb(12, 110, 99);
+        btnAgregar.FlatAppearance.BorderSize = 0;
+        btnAgregar.FlatStyle = FlatStyle.Flat;
+        btnAgregar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        btnAgregar.ForeColor = Color.White;
+        btnAgregar.Location = new Point(522, 18);
+        btnAgregar.Name = "btnAgregar";
+        btnAgregar.Size = new Size(100, 36);
+        btnAgregar.TabIndex = 5;
+        btnAgregar.Text = "Agregar";
+        btnAgregar.UseVisualStyleBackColor = false;
+        btnAgregar.Click += btnAgregar_Click;
         // 
-        // btnEliminar
+        // btnModificar
         // 
-        btnEliminar.BackColor = Color.FromArgb(178, 52, 43);
-        btnEliminar.FlatAppearance.BorderSize = 0;
-        btnEliminar.FlatStyle = FlatStyle.Flat;
-        btnEliminar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        btnEliminar.ForeColor = Color.White;
-        btnEliminar.Location = new Point(420, 74);
-        btnEliminar.Name = "btnEliminar";
-        btnEliminar.Size = new Size(110, 36);
-        btnEliminar.TabIndex = 6;
-        btnEliminar.Text = "Eliminar";
-        btnEliminar.UseVisualStyleBackColor = false;
-        btnEliminar.Click += btnEliminar_Click;
+        btnModificar.BackColor = Color.FromArgb(232, 151, 50);
+        btnModificar.FlatAppearance.BorderSize = 0;
+        btnModificar.FlatStyle = FlatStyle.Flat;
+        btnModificar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        btnModificar.ForeColor = Color.White;
+        btnModificar.Location = new Point(634, 18);
+        btnModificar.Name = "btnModificar";
+        btnModificar.Size = new Size(100, 36);
+        btnModificar.TabIndex = 6;
+        btnModificar.Text = "Modificar";
+        btnModificar.UseVisualStyleBackColor = false;
+        btnModificar.Click += btnModificar_Click;
+        // 
+        // btnDesactivar
+        // 
+        btnDesactivar.BackColor = Color.FromArgb(178, 52, 43);
+        btnDesactivar.FlatAppearance.BorderSize = 0;
+        btnDesactivar.FlatStyle = FlatStyle.Flat;
+        btnDesactivar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        btnDesactivar.ForeColor = Color.White;
+        btnDesactivar.Location = new Point(410, 74);
+        btnDesactivar.Name = "btnDesactivar";
+        btnDesactivar.Size = new Size(100, 36);
+        btnDesactivar.TabIndex = 7;
+        btnDesactivar.Text = "Desactivar";
+        btnDesactivar.UseVisualStyleBackColor = false;
+        btnDesactivar.Click += btnDesactivar_Click;
+        // 
+        // btnLimpiar
+        // 
+        btnLimpiar.BackColor = Color.FromArgb(200, 200, 200);
+        btnLimpiar.FlatAppearance.BorderSize = 0;
+        btnLimpiar.FlatStyle = FlatStyle.Flat;
+        btnLimpiar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        btnLimpiar.ForeColor = Color.FromArgb(44, 51, 47);
+        btnLimpiar.Location = new Point(522, 74);
+        btnLimpiar.Name = "btnLimpiar";
+        btnLimpiar.Size = new Size(100, 36);
+        btnLimpiar.TabIndex = 8;
+        btnLimpiar.Text = "Limpiar";
+        btnLimpiar.UseVisualStyleBackColor = false;
+        btnLimpiar.Click += btnLimpiar_Click;
         // 
         // btnCancelar
         // 
@@ -154,10 +188,10 @@ partial class RolGestion
         btnCancelar.FlatStyle = FlatStyle.Flat;
         btnCancelar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         btnCancelar.ForeColor = Color.FromArgb(44, 51, 47);
-        btnCancelar.Location = new Point(545, 74);
+        btnCancelar.Location = new Point(634, 74);
         btnCancelar.Name = "btnCancelar";
-        btnCancelar.Size = new Size(110, 36);
-        btnCancelar.TabIndex = 7;
+        btnCancelar.Size = new Size(100, 36);
+        btnCancelar.TabIndex = 9;
         btnCancelar.Text = "Cancelar";
         btnCancelar.UseVisualStyleBackColor = false;
         btnCancelar.Click += btnCancelar_Click;
@@ -203,8 +237,10 @@ partial class RolGestion
 
     private Panel panelEditor;
     private Button btnCancelar;
-    private Button btnEliminar;
-    private Button btnGuardar;
+    private Button btnLimpiar;
+    private Button btnDesactivar;
+    private Button btnModificar;
+    private Button btnAgregar;
     private Button btnNuevo;
     private TextBox txtDescripcion;
     private Label lblDescripcion;
