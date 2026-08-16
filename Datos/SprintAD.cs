@@ -246,6 +246,31 @@ namespace Datos
             }
         }
 
+        /// <summary>
+        /// Cambia el estado del Sprint 'Activo' a 'Cerrado'. Solo afecta filas
+        /// si el Sprint estaba en ejecucion (guarda del WHERE de sp_Sprint_Cerrar).
+        /// </summary>
+        public bool CerrarSprint(int sprintId)
+        {
+            try
+            {
+                using (var cn = Conexion.ObtenerConexion())
+                {
+                    using (SqlCommand cmd = new SqlCommand("sp_Sprint_Cerrar", cn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@sprintId", sprintId);
+
+                        return LeerFilasAfectadas(cmd) > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error en la capa datos (Cerrar Sprint): " + ex.Message);
+            }
+        }
+
         // SELECT (Sprint activo del proyecto, o null si no hay ninguno)
         public Sprint? ObtenerSprintActivo(int proyectoId)
         {
@@ -386,7 +411,6 @@ namespace Datos
                         cmd.Parameters.AddWithValue("@Estado", sprint.Estado ?? "Planificado");
                         cmd.Parameters.AddWithValue("@FechaCreacion", sprint.FechaCreacion == default ? DateTime.Now : sprint.FechaCreacion);
 
-                        cn.Open();
                         object resultado = cmd.ExecuteScalar();
                         if (resultado != null && int.TryParse(resultado.ToString(), out int idGenerado))
                         {
@@ -424,7 +448,6 @@ namespace Datos
                         cmd.CommandType = CommandType.Text;
                         cmd.Parameters.AddWithValue("@SprintId", sprintId);
 
-                        cn.Open();
                         using (SqlDataReader dr = cmd.ExecuteReader())
                         {
                             if (dr.Read())
@@ -473,7 +496,6 @@ namespace Datos
                         cmd.Parameters.AddWithValue("@Estado", nuevoEstado);
                         cmd.Parameters.AddWithValue("@SprintId", sprintId);
 
-                        cn.Open();
                         int filasAfectadas = cmd.ExecuteNonQuery();
                         if (filasAfectadas > 0)
                         {

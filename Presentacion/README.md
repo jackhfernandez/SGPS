@@ -179,6 +179,111 @@ de tarjeta que instancia `TableroKanban`, no una pantalla.
 
 ---
 
+## Patrón de pantalla de gestión (referencia Sprint)
+
+`SprintPlanificacion` y `SprintEjecucion` comparten un patrón de pantalla de
+gestión que puedes copiar para los módulos que falten: lista a la izquierda,
+detalle a la derecha y un selector de proyecto arriba.
+
+### Flujo en tres capas
+
+1. **Script** — `Datos/scripts/SGPS_pa_<Tabla>.sql`. Procedimientos idempotentes
+   (`IF OBJECT_ID(...) IS NOT NULL DROP` + `CREATE`). Los de escritura usan
+   `SET NOCOUNT ON` y terminan con `SELECT @@ROWCOUNT AS FilasAfectadas;`
+   porque con `SET NOCOUNT ON` `ExecuteNonQuery` devolvería -1.
+2. **Datos** — `<Tabla>AD.cs`. Un método por procedimiento. Los de escritura leen
+   el conteo con `ExecuteScalar` (helper `LeerFilasAfectadas`). El `try/catch`
+   relanza con prefijo `"Error en la capa datos (...)..."`.
+3. **Lógica** — `<Tabla>LN.cs`. Valida reglas de negocio y devuelve
+   `out string mensajeError` en los métodos que pueden fallar con un mensaje para
+   el usuario. El formulario nunca habla con `AD` directamente.
+
+> **Conexión ya abierta:** `Conexion.ObtenerConexion()` devuelve la conexión
+> abierta. No llames `cn.Open()` después o lanzará *"The connection was not
+> closed. The connection's current state is open."* (era un bug en
+> `SprintAD.Insertar/ObtenerPorId/ActualizarEstado`).
+
+### Maquetación tipo
+
+```
+┌ pnlSelector   (Dock Top, 56px)    combo de proyecto + etiqueta
+├ splitVertical (Dock Fill, vertical)
+│  ├ Panel1 (FixedPanel.Panel1, Panel1MinSize)  grid de la lista + lblResumen (Bottom)
+│  └ Panel2                                  detalle: grid + acciones + resumen
+```
+
+En el detalle, el orden de `Controls.Add` importa (z-order del `Dock`):
+
+```csharp
+pnlDetalle.Controls.Add(dgvHistorias);      // 1º el Fill
+pnlDetalle.Controls.Add(lblTitulo);         // 2º los Top, en orden vertical
+pnlDetalle.Controls.Add(pnlAcciones);       // …
+pnlDetalle.Controls.Add(lblResumenSprint);  // último el Bottom
+```
+
+### Trampas de WinForms
+
+- **`SplitterDistance` no se toca en `InitializeComponent`.** El contenedor aún
+  no tiene ancho real y el setter valida contra el tamaño por defecto (~150px),
+  lanzando `ArgumentOutOfRangeException`. Se ajusta en `OnLoad`:
+
+  ```csharp
+  private void AjustarSplit()
+  {
+      try
+      {
+          var maximo = splitVertical.Width - splitVertical.Panel2MinSize - splitVertical.SplitterWidth;
+          if (maximo > splitVertical.Panel1MinSize)
+          {
+              splitVertical.SplitterDistance = Math.Clamp(
+                  (int)(splitVertical.Width * 0.30),
+                  splitVertical.Panel1MinSize,
+                  maximo);
+          }
+      }
+      catch (Exception) { /* contenedor aún sin ancho: se deja el reparto por defecto */ }
+  }
+  ```
+
+- **En el diseñador, fija `Size` ANTES que `Panel1MinSize`/`Panel2MinSize`.**
+  El setter de `Panel1MinSize` re-ajusta `SplitterDistance` internamente y lo
+  valida contra el ancho actual; si aún es el default (150px) lanza la misma
+  excepción. Este fue el bug real de *"No se pudo abrir 'Planificación'"*.
+- **Colisión de nombres:** dentro de `namespace Presentacion.Sprint`, el tipo
+  `Modelo.Sprint` colisiona con el namespace. Usa `Modelo.Sprint` totalmente
+  calificado; `using Modelo;` no es suficiente.
+- **Flag `_cargando`:** `SelectedIndexChanged`/`SelectionChanged` también se
+  disparan al rellenar la lista desde código. Pon `_cargando = true` mientras
+  rellenas y retorna al inicio del handler si está activo.
+
+### Estado de la UI
+
+Un único método `ActualizarEstadoBotones()` centraliza el `Enabled` de las
+acciones: permiso (`PermisoLN.TieneAcceso(...)`) + estado de la entidad
+seleccionada + selección vigente. Llámalo desde los handlers y desde la carga.
+
+### Verificación
+
+1. `dotnet build SGPS.slnx`
+2. **Prueba headless del diseñador** para cazar excepciones de layout: construir
+   el `Form` sin mostrarlo a varios anchos
+   (`form.ClientSize = ...; form.CreateControl(); form.PerformLayout();`) en un
+   hilo `[STAThread]`.
+3. **Prueba de integración contra la BD** del ciclo completo usando las capas
+   `LN`/`AD` (crear → asignar → iniciar → avanzar estados → cerrar) y limpia los
+   datos al final.
+4. Para ejecutar un script SQL contra la BD local:
+
+   ```
+   sqlcmd -S "localhost\SQLEXPRESS" -E -C -d SGPS_DB -i Datos\scripts\SGPS_pa_Sprint.sql -b
+   ```
+
+   (el `-E` es autenticación de Windows; las credenciales reales están
+   comentadas en `App.config` y en runtime se aplican por las variables
+   `SQLSERVER_DB_*`).
+
+---
+
 ## Estilos: `Ui/Tema.cs`
 
 Fuente de verdad de la identidad visual. **No escribas `Color.FromArgb(...)` a

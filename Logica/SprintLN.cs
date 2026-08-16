@@ -200,5 +200,133 @@ namespace Logica
 
             return true;
         }
+
+        /// <summary>
+        /// Sprint activo del proyecto, o null si no hay ninguno.
+        /// </summary>
+        public Sprint? ObtenerSprintActivo(int proyectoId)
+        {
+            return _sprintAD.ObtenerSprintActivo(proyectoId);
+        }
+
+        /// <summary>
+        /// Estado que sigue en el ciclo de vida de una historia
+        /// (To Do → In Progress → In Testing → Done), o null si el estado
+        /// actual no existe o ya es el ultimo.
+        /// </summary>
+        public static string? SiguienteEstadoHistoria(string estado)
+        {
+            int indice = Array.IndexOf(OrdenEstadosHistoria, estado);
+            return indice >= 0 && indice < OrdenEstadosHistoria.Length - 1
+                ? OrdenEstadosHistoria[indice + 1]
+                : null;
+        }
+
+        /// <summary>
+        /// Estado anterior en el ciclo de vida de una historia, o null si el
+        /// estado actual no existe o ya es el primero.
+        /// </summary>
+        public static string? AnteriorEstadoHistoria(string estado)
+        {
+            int indice = Array.IndexOf(OrdenEstadosHistoria, estado);
+            return indice > 0 ? OrdenEstadosHistoria[indice - 1] : null;
+        }
+
+        /// <summary>
+        /// Avanza (o retrocede) una historia del Sprint Backlog un solo estado
+        /// en su ciclo de vida. Solo es valida mientras el Sprint al que
+        /// pertenece siga 'Activo'; un sprint cerrado congela las historias.
+        /// </summary>
+        public bool CambiarEstadoHistoria(int userStoryId, string nuevoEstado, out string mensajeError)
+        {
+            mensajeError = string.Empty;
+
+            UserStory historia = _userStoryAD.ObtenerPorId(userStoryId);
+            if (historia == null)
+            {
+                mensajeError = "La historia de usuario no existe.";
+                return false;
+            }
+
+            if (!historia.SprintId.HasValue)
+            {
+                mensajeError = "La historia no está asignada a ningún Sprint.";
+                return false;
+            }
+
+            Sprint sprint = _sprintAD.ObtenerPorId(historia.SprintId.Value);
+            if (sprint == null)
+            {
+                mensajeError = "El Sprint de la historia no existe.";
+                return false;
+            }
+
+            if (sprint.Estado != SprintEstadoConstantes.Activo)
+            {
+                mensajeError = "Solo se pueden mover historias de un Sprint en ejecución ('Activo').";
+                return false;
+            }
+
+            int indiceActual = Array.IndexOf(OrdenEstadosHistoria, historia.Estado);
+            int indiceNuevo = Array.IndexOf(OrdenEstadosHistoria, nuevoEstado);
+
+            if (indiceActual < 0 || indiceNuevo < 0)
+            {
+                mensajeError = "Estado inválido para la historia de usuario.";
+                return false;
+            }
+
+            if (Math.Abs(indiceNuevo - indiceActual) != 1)
+            {
+                mensajeError = $"Solo se puede avanzar o retroceder un estado a la vez. Estado actual: '{historia.Estado}'.";
+                return false;
+            }
+
+            if (!_userStoryAD.ActualizarEstado(userStoryId, nuevoEstado))
+            {
+                mensajeError = "No se pudo actualizar el estado de la historia.";
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Cierra el Sprint en ejecución (CA-10.4). Solo es válido para un
+        /// Sprint 'Activo'; una vez cerrado la operación no afecta filas.
+        /// </summary>
+        public bool CerrarSprint(int sprintId, out string mensajeError)
+        {
+            mensajeError = string.Empty;
+
+            Sprint sprint = _sprintAD.ObtenerPorId(sprintId);
+            if (sprint == null)
+            {
+                mensajeError = "El Sprint especificado no existe.";
+                return false;
+            }
+
+            if (sprint.Estado != SprintEstadoConstantes.Activo)
+            {
+                mensajeError = "Solo se puede cerrar un Sprint en ejecución ('Activo').";
+                return false;
+            }
+
+            if (!_sprintAD.CerrarSprint(sprintId))
+            {
+                mensajeError = "No se pudo cerrar el Sprint.";
+                return false;
+            }
+
+            return true;
+        }
+
+        private static readonly string[] OrdenEstadosHistoria =
+        {
+            UserStoryEstadoConstantes.ToDo,
+            UserStoryEstadoConstantes.InProgress,
+            UserStoryEstadoConstantes.InTesting,
+            UserStoryEstadoConstantes.Done
+        };
     }
 }

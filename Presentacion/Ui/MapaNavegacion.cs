@@ -69,7 +69,7 @@ public static class MapaNavegacion
         new("Sprints", Tema.Glifos.Cronometro, "Planificación y cierre de iteraciones",
         [
             new("Planificación", Modulo.SprintPlanificacion, () => new SprintPlanificacion(), true),
-            new("Ejecución", Modulo.SprintEjecucion, () => new SprintEjecucion(), false)
+            new("Ejecución", Modulo.SprintEjecucion, () => new SprintEjecucion(), true)
         ]),
 
         new("Kanban", Tema.Glifos.Tablero, "Tablero del sprint activo",

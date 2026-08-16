@@ -349,3 +349,29 @@ BEGIN
     SELECT @@ROWCOUNT AS FilasAfectadas;
 END;
 GO
+
+-- ============================================================================
+-- 10. PROCEDIMIENTO ALMACENADO: Cerrar Sprint
+-- Transiciona el Sprint 'Activo' a 'Cerrado'. La guarda del WHERE garantiza
+-- CA-10.4: solo un Sprint en ejecucion puede cerrarse, y una vez cerrado el
+-- cierre no se puede repetir (0 filas afectadas -> el AD devuelve false).
+-- ============================================================================
+IF OBJECT_ID('sp_Sprint_Cerrar', 'P') IS NOT NULL
+    DROP PROCEDURE sp_Sprint_Cerrar;
+GO
+
+CREATE PROCEDURE sp_Sprint_Cerrar
+    @sprintId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE s
+    SET s.Estado = 'Cerrado'
+    FROM dbo.Sprints AS s
+    WHERE s.SprintId = @sprintId
+      AND s.Estado = 'Activo';
+
+    SELECT @@ROWCOUNT AS FilasAfectadas;
+END;
+GO
