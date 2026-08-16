@@ -62,7 +62,7 @@ public static class MapaNavegacion
         new("Backlog", Tema.Glifos.Lista, "Epics, historias y priorización",
         [
             new("Product Backlog", Modulo.ProductBacklogGestion, () => new ProductBacklogGestion(), false),
-            new("Epics", Modulo.EpicGestion, () => new EpicGestion(), false),
+            new("Epics", Modulo.EpicGestion, () => new EpicGestion(), true),
             new("Historias", Modulo.UserStoryEdicion, () => new UserStoryEdicion(), false)
         ]),
 
