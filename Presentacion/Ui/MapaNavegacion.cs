@@ -74,8 +74,8 @@ public static class MapaNavegacion
 
         new("Kanban", Tema.Glifos.Tablero, "Tablero del sprint activo",
         [
-            new("Tablero", Modulo.TableroKanban, () => new TableroKanban(), false),
-            new("Tareas", Modulo.TareaEdicion, () => new TareaEdicion(), false)
+            new("Tablero", Modulo.TableroKanban, () => new TableroKanban(), true),
+            new("Tareas", Modulo.TareaEdicion, () => new TareaEdicion(), true)
         ]),
 
         new("QA", Tema.Glifos.Alerta, "Defectos y re-prueba",

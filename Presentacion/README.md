@@ -116,8 +116,8 @@ Firmas de los dos records:
 
 ## El interruptor `Construido`
 
-Es el último `bool` de `ItemNav`. Hoy 13 de los 20 formularios siguen siendo
-plantillas vacías, así que están en `false`.
+Es el último `bool` de `ItemNav`. Hoy 5 de los 16 ítems del mapa siguen siendo
+plantillas vacías (QA, Métricas y Cliente), así que están en `false`.
 
 | Valor   | Tarjeta del Resumen                    | Al pulsar el ítem                       |
 |---------|----------------------------------------|-----------------------------------------|
@@ -261,6 +261,47 @@ pnlDetalle.Controls.Add(lblResumenSprint);  // último el Bottom
 Un único método `ActualizarEstadoBotones()` centraliza el `Enabled` de las
 acciones: permiso (`PermisoLN.TieneAcceso(...)`) + estado de la entidad
 seleccionada + selección vigente. Llámalo desde los handlers y desde la carga.
+
+---
+
+## Patrón de tablero (referencia Kanban)
+
+`TableroKanban` no usa el patrón lista/detalle: son cuatro columnas de estado
+(`To Do`, `In Progress`, `In Testing`, `Done`) generadas en código sobre un
+`TableLayoutPanel` del diseñador. Cada columna es un `PanelTarjeta` con una
+etiqueta de encabezado (`Dock.Top`) y un `FlowLayoutPanel` desplazable
+(`Dock.Fill`, `AutoScroll = true`) que contiene las tarjetas.
+
+- **Las columnas se generan en código** porque son la misma pieza repetida y
+  porque el diseñador no puede cablear el arrastre entre ellas.
+- **Las tarjetas (`UcTarjetaKanban`) se pintan a mano.** Una tarjeta compuesta
+  de labels no se puede arrastrar de una pieza: el `MouseDown` lo captura el
+  hijo, no el control. Con `UserPaint` toda la tarjeta es una superficie única.
+- **El arrastre solo se inicia al superar `SystemInformation.DragSize`**, para
+  no convertir en arrastre cualquier clic con un temblor de ratón.
+- **Las tarjetas no tienen `AllowDrop`**: lo tienen la columna y su lista, así
+  el soltar sobre una tarjeta cae en la columna que la contiene.
+- **El ancho de las tarjetas se recalcula en el `Resize` de la lista**, porque
+  la barra de desplazamiento aparece y desaparece según cuántas haya.
+
+El cambio de estado no lo decide el formulario: lo aplica
+`TareaLN.CambiarEstadoKanbanUserStory(...)`, que valida la transición del flujo,
+la Definition of Done (no hay paso a `Done` con tareas técnicas pendientes ni
+con bugs Bloqueante/Alta abiertos), autoasigna la historia al pasar a
+`In Progress` y registra el cambio en `dbo.HistorialCambios`. El formulario solo
+captura `InvalidOperationException` y muestra su mensaje.
+
+`TareaEdicion` tiene **dos modos** con el mismo código:
+
+| Constructor                  | Modo                | Selector de proyecto/historia |
+|------------------------------|---------------------|-------------------------------|
+| `new TareaEdicion()`         | pantalla del shell  | visible                       |
+| `new TareaEdicion(historia)` | diálogo del tablero | oculto (`pnlSelector`)        |
+
+> **Conexión ya abierta (otra vez):** el mismo bug de `cn.Open()` doble que
+> tenía `SprintAD` estaba en `TareaAD`, `BugAD` y `HistorialCambioAD`, y hacía
+> caer el arrastre a `Done`. Quedan instancias en `ProyectoAD`
+> (líneas ~229, ~275, ~305, ~369) pendientes para quien lleve ese módulo.
 
 ### Verificación
 

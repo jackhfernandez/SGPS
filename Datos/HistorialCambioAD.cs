@@ -45,7 +45,8 @@ namespace Datos
                         ? DateTime.Now
                         : historial.FechaModificacion;
 
-                    cn.Open();
+                    // Conexion.ObtenerConexion() ya devuelve la conexion abierta:
+                    // volver a abrirla lanzaria InvalidOperationException.
                     object result = cmd.ExecuteScalar();
                     return Convert.ToInt32(result);
                 }
@@ -84,7 +85,6 @@ namespace Datos
                     cmd.Parameters.Add("@Entidad", SqlDbType.VarChar, 50).Value = entidad;
                     cmd.Parameters.Add("@EntidadId", SqlDbType.Int).Value = entidadId;
 
-                    cn.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         while (dr.Read())
@@ -139,7 +139,6 @@ namespace Datos
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
 
-                    cn.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         while (dr.Read())

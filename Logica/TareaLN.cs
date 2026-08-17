@@ -36,9 +36,51 @@ namespace Logica
 
             // Estado inicial por defecto en SGPS_DB
             if (string.IsNullOrWhiteSpace(tarea.Estado))
-                tarea.Estado = "Pendiente";
+                tarea.Estado = TareaEstadoConstantes.Pendiente;
 
             return _tareaAD.Insertar(tarea);
+        }
+
+        /// <summary>
+        /// Tarea tecnica por identificador, o null si no existe.
+        /// </summary>
+        public Tarea? ObtenerTarea(int tareaId) => _tareaAD.ObtenerPorId(tareaId);
+
+        /// <summary>
+        /// Guarda los cambios del formulario de desglose tecnico: titulo,
+        /// horas, estado y responsable de una tarea ya registrada.
+        /// </summary>
+        public bool ActualizarTarea(Tarea tarea)
+        {
+            if (tarea == null)
+                throw new ArgumentNullException(nameof(tarea), "Los datos de la tarea no pueden ser nulos.");
+
+            if (tarea.TareaId <= 0)
+                throw new ArgumentException("La tarea a modificar no tiene un identificador válido.");
+
+            if (string.IsNullOrWhiteSpace(tarea.TituloTarea))
+                throw new ArgumentException("El título de la tarea técnica es obligatorio.");
+
+            if (tarea.HorasEstimadas < 0 || tarea.HorasTrabajadas < 0)
+                throw new ArgumentException("Las horas no pueden tener valores negativos.");
+
+            if (!TareaEstadoConstantes.Orden.Contains(tarea.Estado))
+                throw new InvalidOperationException($"Estado '{tarea.Estado}' no es válido para tareas técnicas.");
+
+            return _tareaAD.Actualizar(tarea);
+        }
+
+        /// <summary>
+        /// Estado que sigue en el avance de una tarea tecnica
+        /// (Pendiente → En Proceso → Completado), o null si ya es el ultimo.
+        /// </summary>
+        public static string? SiguienteEstadoTarea(string estadoActual)
+        {
+            int indice = Array.IndexOf(TareaEstadoConstantes.Orden, estadoActual);
+
+            return indice >= 0 && indice < TareaEstadoConstantes.Orden.Length - 1
+                ? TareaEstadoConstantes.Orden[indice + 1]
+                : null;
         }
 
         public bool ActualizarImputacionHoras(int tareaId, decimal horasTrabajadas, decimal horasEstimadas)
@@ -58,8 +100,7 @@ namespace Logica
 
         public bool CambiarEstadoTareaTecnica(int tareaId, string nuevoEstado)
         {
-            string[] estadosValidos = { "Pendiente", "En Proceso", "Completado" };
-            if (!estadosValidos.Contains(nuevoEstado))
+            if (!TareaEstadoConstantes.Orden.Contains(nuevoEstado))
                 throw new InvalidOperationException($"Estado '{nuevoEstado}' no es válido para tareas técnicas.");
 
             Tarea tarea = _tareaAD.ObtenerPorId(tareaId);

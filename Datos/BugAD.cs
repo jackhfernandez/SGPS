@@ -244,7 +244,8 @@ namespace Datos
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = userStoryId;
 
-                    cn.Open();
+                    // Conexion.ObtenerConexion() ya devuelve la conexion abierta:
+                    // volver a abrirla lanzaria InvalidOperationException.
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         while (dr.Read())
@@ -293,7 +294,6 @@ namespace Datos
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = userStoryId;
 
-                    cn.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         while (dr.Read())
@@ -340,7 +340,6 @@ namespace Datos
                     cmd.Parameters.Add("@UsuarioAsignadoId", SqlDbType.Int).Value = (object)bug.UsuarioAsignadoId ?? DBNull.Value;
                     cmd.Parameters.Add("@FechaReporte", SqlDbType.DateTime).Value = bug.FechaReporte == default(DateTime) ? DateTime.Now : bug.FechaReporte;
 
-                    cn.Open();
                     object result = cmd.ExecuteScalar();
                     if (result != null && result != DBNull.Value)
                     {
@@ -374,7 +373,6 @@ namespace Datos
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.Add("@BugId", SqlDbType.Int).Value = bugId;
 
-                    cn.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         if (dr.Read())

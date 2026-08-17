@@ -15,6 +15,10 @@
  *
  *    Los metodos de escritura leen @@ROWCOUNT con
  *    ExecuteScalar porque los procedimientos usan SET NOCOUNT ON.
+ *
+ *    Se quitaron los cn.Open() de los metodos con SQL en linea:
+ *    Conexion.ObtenerConexion() ya devuelve la conexion abierta y el segundo
+ *    Open() lanzaba "The connection was not closed" al abrir TareaEdicion.cs.
  */
 
 using Microsoft.Data.SqlClient;
@@ -218,7 +222,6 @@ namespace Datos
                     cmd.Parameters.Add("@UsuarioAsignadoId", SqlDbType.Int).Value = (object)tarea.UsuarioAsignadoId ?? DBNull.Value;
                     cmd.Parameters.Add("@FechaCreacion", SqlDbType.DateTime).Value = tarea.FechaCreacion == default(DateTime) ? DateTime.Now : tarea.FechaCreacion;
 
-                    cn.Open();
                     object result = cmd.ExecuteScalar();
                     return Convert.ToInt32(result);
                 }
@@ -240,7 +243,6 @@ namespace Datos
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.Add("@TareaId", SqlDbType.Int).Value = tareaId;
 
-                    cn.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         if (dr.Read())
@@ -286,7 +288,6 @@ namespace Datos
                     cmd.Parameters.Add("@Estado", SqlDbType.VarChar, 20).Value = tarea.Estado;
                     cmd.Parameters.Add("@UsuarioAsignadoId", SqlDbType.Int).Value = (object)tarea.UsuarioAsignadoId ?? DBNull.Value;
 
-                    cn.Open();
                     return cmd.ExecuteNonQuery() > 0;
                 }
             }
@@ -308,7 +309,6 @@ namespace Datos
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.Add("@UserStoryId", SqlDbType.Int).Value = userStoryId;
 
-                    cn.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         while (dr.Read())
