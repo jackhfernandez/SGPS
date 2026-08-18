@@ -147,7 +147,7 @@ namespace Presentacion.Sprint
                 dgvSprints.Columns.Add("Fin", "Fin");
                 dgvSprints.Columns.Add("SP", "SP");
 
-                dgvSprints.Columns["Nombre"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                dgvSprints.Columns["Nombre"]!.Width = 180;
                 dgvSprints.Columns["Estado"]!.Width = 80;
                 dgvSprints.Columns["Inicio"]!.Width = 65;
                 dgvSprints.Columns["Fin"]!.Width = 65;

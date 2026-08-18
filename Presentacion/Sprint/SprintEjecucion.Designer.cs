@@ -136,8 +136,8 @@
             //
             pnlDetalle.BackColor = Color.FromArgb(245, 241, 232);
             pnlDetalle.Controls.Add(dgvHistorias);
-            pnlDetalle.Controls.Add(lblTitulo);
             pnlDetalle.Controls.Add(pnlAcciones);
+            pnlDetalle.Controls.Add(lblTitulo);
             pnlDetalle.Controls.Add(lblResumenSprint);
             pnlDetalle.Dock = DockStyle.Fill;
             pnlDetalle.Location = new Point(0, 0);

@@ -329,15 +329,17 @@
             tblBacklog.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42F));
             tblBacklog.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 116F));
             tblBacklog.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42F));
-            tblBacklog.Controls.Add(dgvDisponibles, 0, 0);
             tblBacklog.Controls.Add(lblDisponibles, 0, 0);
             tblBacklog.Controls.Add(pnlBotones, 1, 0);
-            tblBacklog.Controls.Add(dgvSprintBacklog, 2, 0);
             tblBacklog.Controls.Add(lblSprintBacklog, 2, 0);
+            tblBacklog.Controls.Add(dgvDisponibles, 0, 1);
+            tblBacklog.Controls.Add(dgvSprintBacklog, 2, 1);
+            tblBacklog.SetRowSpan(pnlBotones, 2);
             tblBacklog.Dock = DockStyle.Fill;
             tblBacklog.Location = new Point(0, 0);
             tblBacklog.Name = "tblBacklog";
-            tblBacklog.RowCount = 1;
+            tblBacklog.RowCount = 2;
+            tblBacklog.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
             tblBacklog.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             tblBacklog.Size = new Size(900, 384);
             tblBacklog.TabIndex = 0;
@@ -513,6 +515,7 @@
             dgvSprints.Name = "dgvSprints";
             dgvSprints.ReadOnly = true;
             dgvSprints.RowHeadersVisible = false;
+            dgvSprints.ScrollBars = ScrollBars.Horizontal;
             dgvSprints.Size = new Size(260, 334);
             dgvSprints.TabIndex = 1;
             dgvSprints.SelectionChanged += dgvSprints_SelectionChanged;
