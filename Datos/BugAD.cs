@@ -198,6 +198,32 @@ namespace Datos
         }
 
         /// <summary>
+        /// Cambia la severidad de un Bug (Bloqueante, Alta, Media, Baja).
+        /// </summary>
+        public bool ActualizarSeveridad(int bugId, string nuevaSeveridad)
+        {
+            try
+            {
+                using (var cn = Conexion.ObtenerConexion())
+                {
+                    using (SqlCommand cmd = new SqlCommand("sp_Bug_ActualizarSeveridad", cn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.AddWithValue("@bugId", bugId);
+                        cmd.Parameters.AddWithValue("@nuevaSeveridad", nuevaSeveridad);
+
+                        return LeerFilasAfectadas(cmd) > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error en la capa datos (Actualizar Severidad de Bug): " + ex.Message);
+            }
+        }
+
+        /// <summary>
         /// Los procedimientos usan SET NOCOUNT ON, por lo que ExecuteNonQuery
         /// devolveria -1: el conteo de filas llega como resultado del SELECT
         /// @@ROWCOUNT final del procedimiento.

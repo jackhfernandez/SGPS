@@ -80,7 +80,7 @@ public static class MapaNavegacion
 
         new("QA", Tema.Glifos.Alerta, "Defectos y re-prueba",
         [
-            new("Bugs", Modulo.BugGestion, () => new BugGestion(), false),
+            new("Bugs", Modulo.BugGestion, () => new BugGestion(), true),
             new("Reportar bug", Modulo.BugReporte, () => new BugReporte(), true)
         ]),
 

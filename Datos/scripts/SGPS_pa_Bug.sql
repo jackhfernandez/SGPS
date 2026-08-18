@@ -190,3 +190,27 @@ BEGIN
     SELECT @@ROWCOUNT AS FilasAfectadas;
 END;
 GO
+
+-- ============================================================================
+-- 7. PROCEDIMIENTO ALMACENADO: Actualizar severidad del Bug
+-- La severidad se edita directamente desde la rejilla de gestion (Bloqueante,
+-- Alta, Media, Baja), guardando el historial de cambios desde la capa logica.
+-- ============================================================================
+IF OBJECT_ID('sp_Bug_ActualizarSeveridad', 'P') IS NOT NULL
+    DROP PROCEDURE sp_Bug_ActualizarSeveridad;
+GO
+
+CREATE PROCEDURE sp_Bug_ActualizarSeveridad
+    @bugId           INT,
+    @nuevaSeveridad  VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.Bugs
+    SET Severidad = @nuevaSeveridad
+    WHERE BugId = @bugId;
+
+    SELECT @@ROWCOUNT AS FilasAfectadas;
+END;
+GO

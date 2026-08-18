@@ -150,6 +150,78 @@ namespace Logica
         }
 
         /// <summary>
+        /// Cambia la severidad de un Bug (Bloqueante, Alta, Media, Baja).
+        /// </summary>
+        public bool ActualizarSeveridadBug(int bugId, string nuevaSeveridad, int usuarioId, out string mensaje)
+        {
+            mensaje = string.Empty;
+
+            string[] severidadesValidas = { "Bloqueante", "Alta", "Media", "Baja" };
+
+            if (!severidadesValidas.Contains(nuevaSeveridad, StringComparer.OrdinalIgnoreCase))
+            {
+                mensaje = "La severidad indicada no es válida.";
+                return false;
+            }
+
+            Bug bugExistente = _bugAD.ObtenerPorId(bugId);
+            if (bugExistente == null)
+            {
+                mensaje = "El Bug especificado no existe.";
+                return false;
+            }
+
+            string severidadAnterior = bugExistente.Severidad;
+
+            bool actualizado = _bugAD.ActualizarSeveridad(bugId, nuevaSeveridad);
+            if (actualizado)
+            {
+                _historialAD.Insertar(new HistorialCambio
+                {
+                    Entidad = "Bug",
+                    EntidadId = bugId,
+                    CampoModificado = "Severidad",
+                    ValorAnterior = severidadAnterior,
+                    ValorNuevo = nuevaSeveridad,
+                    UsuarioId = usuarioId,
+                    FechaModificacion = DateTime.Now
+                });
+                return true;
+            }
+
+            mensaje = "No se pudo actualizar la severidad del Bug en la base de datos.";
+            return false;
+        }
+
+        /// <summary>
+        /// Orden del ciclo de vida de un Bug según QA: Nuevo → En Proceso →
+        /// Resuelto → Cerrado.
+        /// </summary>
+        private static readonly string[] OrdenEstadosBug = { "Nuevo", "En Proceso", "Resuelto", "Cerrado" };
+
+        /// <summary>
+        /// Estado que sigue en el ciclo de vida de un Bug, o null si el estado
+        /// actual no existe o ya es el último.
+        /// </summary>
+        public static string? SiguienteEstadoBug(string estado)
+        {
+            int indice = Array.IndexOf(OrdenEstadosBug, estado);
+            return indice >= 0 && indice < OrdenEstadosBug.Length - 1
+                ? OrdenEstadosBug[indice + 1]
+                : null;
+        }
+
+        /// <summary>
+        /// Estado anterior en el ciclo de vida de un Bug, o null si el estado
+        /// actual no existe o ya es el primero.
+        /// </summary>
+        public static string? AnteriorEstadoBug(string estado)
+        {
+            int indice = Array.IndexOf(OrdenEstadosBug, estado);
+            return indice > 0 ? OrdenEstadosBug[indice - 1] : null;
+        }
+
+        /// <summary>
         /// Cambia el estado de un Bug (ej. En Proceso, Resuelto, Cerrado).
         /// </summary>
         public bool ActualizarEstadoBug(int bugId, string nuevoEstado, int usuarioId, out string mensaje)
