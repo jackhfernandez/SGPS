@@ -81,7 +81,7 @@ public static class MapaNavegacion
         new("QA", Tema.Glifos.Alerta, "Defectos y re-prueba",
         [
             new("Bugs", Modulo.BugGestion, () => new BugGestion(), false),
-            new("Reportar bug", Modulo.BugReporte, () => new BugReporte(), false)
+            new("Reportar bug", Modulo.BugReporte, () => new BugReporte(), true)
         ]),
 
         new("Métricas", Tema.Glifos.Grafico, "Burndown y velocidad del equipo",

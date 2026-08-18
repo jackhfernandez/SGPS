@@ -112,6 +112,44 @@ namespace Logica
         }
 
         /// <summary>
+        /// Lista los Bugs de un proyecto. Los filtros de estado y severidad son
+        /// opcionales: en null no se aplican.
+        /// </summary>
+        public List<Bug> ListarBugsPorProyecto(int proyectoId, string? estado = null, string? severidad = null)
+        {
+            return _bugAD.ListarBugsPorProyecto(proyectoId, estado, severidad);
+        }
+
+        /// <summary>
+        /// Genera el siguiente código de bug del proyecto con el formato
+        /// BUG-&lt;clave&gt;-NN que exige la especificación (ej. BUG-SGPS-01),
+        /// tomando el mayor correlativo existente.
+        /// </summary>
+        public string GenerarCodigoBug(int proyectoId, string claveProyecto)
+        {
+            if (string.IsNullOrWhiteSpace(claveProyecto))
+                throw new ArgumentException("La clave del proyecto es obligatoria para generar el código.");
+
+            var prefijo = $"BUG-{claveProyecto.Trim().ToUpperInvariant()}";
+            var maximo = 0;
+
+            foreach (var bug in _bugAD.ListarBugsPorProyecto(proyectoId))
+            {
+                var partes = bug.CodigoBug?.Split('-');
+
+                if (partes is { Length: 3 } &&
+                    string.Equals($"{partes[0]}-{partes[1]}", prefijo, StringComparison.OrdinalIgnoreCase) &&
+                    int.TryParse(partes[2], out var numero) &&
+                    numero > maximo)
+                {
+                    maximo = numero;
+                }
+            }
+
+            return $"{prefijo}-{maximo + 1:00}";
+        }
+
+        /// <summary>
         /// Cambia el estado de un Bug (ej. En Proceso, Resuelto, Cerrado).
         /// </summary>
         public bool ActualizarEstadoBug(int bugId, string nuevoEstado, int usuarioId, out string mensaje)
